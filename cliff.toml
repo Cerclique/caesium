@@ -1,8 +1,8 @@
-# git-cliff configuration: generates docs/CHANGELOG.md from conventional commits.
+# git-cliff configuration: generates CHANGELOG.md from conventional commits.
 # https://git-cliff.org/docs/configuration
 #
-# Regenerate:       git cliff -o docs/CHANGELOG.md
-# Cut a release:    git cliff --bump -o docs/CHANGELOG.md   (next version from commit types)
+# Regenerate:       git cliff -o CHANGELOG.md
+# Cut a release:    git cliff --bump -o CHANGELOG.md   (next version from commit types)
 #
 # Merge commits are not conventional and are dropped with a "parse error(s)"
 # warning; that is expected.

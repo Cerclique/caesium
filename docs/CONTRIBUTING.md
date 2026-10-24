@@ -96,7 +96,7 @@ Significant design decisions are recorded as ADRs in [`docs/adr/`](adr/).
   breaking change with `!` in the PR title (e.g. `feat!: ...`), or with a
   `BREAKING CHANGE:` footer in a branch commit (one in the PR description is
   not carried into the history).
-- Don't edit `docs/CHANGELOG.md` by hand: it is generated from the commit history by
+- Don't edit `CHANGELOG.md` by hand: it is generated from the commit history by
   [git-cliff](https://git-cliff.org) when a release is cut.
 - The `semver` CI job compares the public API with the latest release. A red
   `semver` job is not a blocker; it signals that the next release must be a
@@ -108,7 +108,7 @@ Releases are cut by the maintainer, also through a pull request:
 
 1. On a `release/vX.Y.Z` branch, bump `version` in `Cargo.toml` (and
    `Cargo.lock`) and the `tag = "vX.Y.Z"` in the README Installation section.
-2. Regenerate the changelog: `git cliff --tag vX.Y.Z -o docs/CHANGELOG.md`.
+2. Regenerate the changelog: `git cliff --tag vX.Y.Z -o CHANGELOG.md`.
 3. Commit as `chore: release vX.Y.Z` and open a PR.
 4. Once it is merged, tag the merge commit on `main` and push the tag:
 

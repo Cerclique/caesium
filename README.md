@@ -125,7 +125,7 @@ Every line is written to stdout in a fixed shape:
 
 ## Changelog
 
-See [CHANGELOG.md](https://github.com/Cerclique/lithium/blob/main/docs/CHANGELOG.md).
+See [CHANGELOG.md](https://github.com/Cerclique/lithium/blob/main/CHANGELOG.md).
 
 ## Contributing
 
