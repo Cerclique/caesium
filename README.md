@@ -131,6 +131,7 @@ See [CHANGELOG.md](https://github.com/Cerclique/lithium/blob/main/docs/CHANGELOG
 
 See [CONTRIBUTING.md](https://github.com/Cerclique/lithium/blob/main/docs/CONTRIBUTING.md).
 To report a vulnerability, see [SECURITY.md](https://github.com/Cerclique/lithium/blob/main/docs/SECURITY.md).
+This project follows a [Code of Conduct](https://github.com/Cerclique/lithium/blob/main/docs/CODE_OF_CONDUCT.md).
 
 ## License
 
