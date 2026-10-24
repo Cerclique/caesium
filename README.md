@@ -9,8 +9,8 @@ A logger wrapper with elapsed time tracking and colorized output built on [env_l
 
 ## Features
 
-- Elapsed time tracking per line
-- Custom format: `[HH:MM:SS.sss | LEVEL | target | file:line ] message`
+- Fixed line format: elapsed time, level, target and optional source
+  location (see [Format](#format))
 - Programmatic log level configuration via `LoggerBuilder`
 - Colorized output toggle via `color`, disabled by default
 - Source location toggle via `source_location`, enabled by default
