@@ -122,6 +122,10 @@ Every line is written to stdout in a fixed shape:
   not a TTY (for example, when piped or redirected). It means "allow color
   when the terminal supports it".
 
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md).
+
 ## License
 
 [MIT](./LICENSE)
