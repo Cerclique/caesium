@@ -1,5 +1,5 @@
 <!--
-The PR title becomes the squash-commit message and must be a Conventional
+The PR title becomes the squash-commit title and must be a Conventional
 Commit, e.g. `feat: add ...`, `fix: ...`, `docs: ...`. See CONTRIBUTING.md.
 -->
 

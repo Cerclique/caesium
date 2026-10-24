@@ -42,9 +42,10 @@ Significant design decisions are recorded as ADRs in [`docs/adr/`](docs/adr/).
 
 - Branch from `main` and open a pull request against `main`. Direct pushes to
   `main` are blocked, and CI must pass before merging.
-- PRs are **squash-merged**, and the PR title becomes the commit message. It
-  must follow [Conventional Commits](https://www.conventionalcommits.org/), which
-  CI checks:
+- PRs are **squash-merged**. The PR title becomes the commit title and the
+  branch's commit messages become its body; the PR description stays on GitHub
+  and is not copied into the history. The PR title must follow
+  [Conventional Commits](https://www.conventionalcommits.org/), which CI checks:
 
   ```text
   <type>[(scope)][!]: <description>
@@ -52,7 +53,9 @@ Significant design decisions are recorded as ADRs in [`docs/adr/`](docs/adr/).
 
   Types: `feat`, `fix`, `perf`, `refactor`, `docs`, `build` (shown in the
   changelog), and `ci`, `test`, `chore`, `style` (left out of it). Mark a
-  breaking change with `!` (e.g. `feat!: ...`) or a `BREAKING CHANGE:` footer.
+  breaking change with `!` in the PR title (e.g. `feat!: ...`), or with a
+  `BREAKING CHANGE:` footer in a branch commit (one in the PR description is
+  not carried into the history).
 - Don't edit `CHANGELOG.md` by hand: it is generated from the commit history by
   [git-cliff](https://git-cliff.org) when a release is cut.
 - The `semver` CI job compares the public API with the latest release. A red
