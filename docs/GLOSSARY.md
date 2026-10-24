@@ -26,8 +26,9 @@ location and message, in a fixed shape.
 _Avoid_: Entry, log entry, output
 
 **Elapsed time**:
-The milliseconds between initialization and a record being written, shown at
-the start of every line.
+The time between initialization and a record being written, shown at the
+start of every line as hours, minutes, seconds and milliseconds. It is a
+duration, not a time of day.
 _Avoid_: Timestamp, uptime, duration
 
 **Minimum level**:

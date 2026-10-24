@@ -35,7 +35,7 @@ pub enum LoggerError {
 /// # stdout format
 ///
 /// ```text
-/// [      120 | ERROR | my_crate | src/lib.rs:42 ] something went wrong
+/// [00:02:05.120 | ERROR | my_crate | src/lib.rs:42 ] something went wrong
 /// ```
 ///
 /// # Example
@@ -195,17 +195,21 @@ mod tests {
         );
     }
 
-    /// Strips the elapsed-time field, which depends on wall-clock time.
+    /// Strips the elapsed-time field, which depends on wall-clock time,
+    /// after checking it has the `[HH:MM:SS.sss` shape.
     fn without_elapsed(output: &str) -> Vec<&str> {
         output
             .lines()
             .map(|line| {
                 let (elapsed, rest) = line.split_once(" | ").expect("missing elapsed field");
-                elapsed
-                    .trim_start_matches('[')
-                    .trim()
-                    .parse::<u128>()
-                    .expect("elapsed field is not a number");
+                let shape: String = elapsed
+                    .chars()
+                    .map(|c| if c.is_ascii_digit() { '0' } else { c })
+                    .collect();
+                assert_eq!(
+                    shape, "[00:00:00.000",
+                    "unexpected elapsed field {elapsed:?}"
+                );
                 rest
             })
             .collect()
