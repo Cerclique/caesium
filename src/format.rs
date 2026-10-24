@@ -2,9 +2,10 @@
 //!
 //! [`format_line`] is the pure core: given the elapsed milliseconds and a
 //! [`log::Record`], it returns a [`Display`] value that renders the exact
-//! formatted line `lithium` writes for that record, without allocating. [`LineFormatter`] is a thin adapter that binds the origin
-//! instant and the colour flag, and hands each formatted line to the
-//! `env_logger` formatter buffer.
+//! formatted line `lithium` writes for that record, without allocating.
+//! [`LineFormatter`] is a thin adapter that binds the origin instant and the
+//! color flag, and hands each formatted line to the `env_logger` formatter
+//! buffer.
 //!
 //! A formatted line has a fixed shape:
 //!
@@ -22,7 +23,7 @@ use std::time::Instant;
 
 use log::Record;
 
-/// Binds the origin instant and the colour flag for a running logger, and
+/// Binds the origin instant and the color flag for a running logger, and
 /// writes formatted lines into the `env_logger` formatter buffer.
 ///
 /// The origin instant is captured in [`new`], which [`LoggerBuilder::init`] calls,
@@ -43,7 +44,7 @@ impl LineFormatter {
     }
 
     /// Writes `record` as a formatted line to the `env_logger` formatter
-    /// buffer, styled with the level colour when colour is enabled.
+    /// buffer, styled with the level color when color is enabled.
     pub(crate) fn format(
         &self,
         buf: &mut env_logger::fmt::Formatter,

@@ -11,8 +11,8 @@ A logger wrapper with elapsed time tracking and colorized output built on [env_l
 
 ## Usage
 
-Configure a [`LoggerBuilder`], then call [`init`] once to install it as the
-global logger:
+Configure a [`LoggerBuilder`], then call [`init`] once to initialize it as
+the global logger:
 
 ```rust
 use lithium::{LoggerBuilder, LevelFilter};
@@ -29,7 +29,7 @@ The default minimum level is `Info`. Override it with [`level`].
 Colorized output is disabled by default. Enable it with [`color`].
 
 Only one global logger can exist per process, so [`init`] returns an error if
-one is already installed, whether by an earlier call or by another crate.
+one is already initialized, whether by an earlier call or by another crate.
 
 [`LoggerBuilder`]: https://docs.rs/lithium/latest/lithium/struct.LoggerBuilder.html
 [`init`]: https://docs.rs/lithium/latest/lithium/struct.LoggerBuilder.html#method.init

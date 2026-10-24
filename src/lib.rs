@@ -14,7 +14,7 @@ mod format;
 /// [`thiserror`]: https://docs.rs/thiserror
 #[derive(Debug, Error)]
 pub enum LoggerError {
-    /// Returned when a global logger is already installed, whether by an
+    /// Returned when the global logger is already initialized, whether by an
     /// earlier call to [`LoggerBuilder::init`] or by another crate.
     #[error("failed to initialize logger: {0}")]
     InitError(#[from] log::SetLoggerError),
@@ -24,11 +24,11 @@ pub enum LoggerError {
 // Builder
 // ---------------------------------------------------------------------------
 
-/// Configures and installs the global logger, which writes elapsed time and
+/// Configures and initializes the global logger, which writes elapsed time and
 /// optional colorized output on top of [`env_logger`].
 ///
 /// `LoggerBuilder` uses a fluent builder pattern. Construct it via [`new`],
-/// configure it with [`level`] and [`color`], then install it with [`init`].
+/// configure it with [`level`] and [`color`], then initialize it with [`init`].
 ///
 /// # stdout format
 ///
@@ -88,19 +88,19 @@ impl LoggerBuilder {
         self
     }
 
-    /// Installs the global logger with a custom formatter that includes
+    /// Initializes the global logger with a custom formatter that includes
     /// elapsed time, log level, target, file, and line number. Elapsed time on
     /// each formatted line is measured from the moment this method runs.
     ///
     /// Only one global logger can exist per process. If one is already
-    /// installed, whether by an earlier call to this method or by another
+    /// initialized, whether by an earlier call to this method or by another
     /// crate, this returns [`LoggerError::InitError`] and changes nothing.
     pub fn init(&self) -> Result<(), LoggerError> {
         self.env_builder().try_init()?;
         Ok(())
     }
 
-    /// Returns the `env_logger` builder that [`init`] installs globally,
+    /// Returns the `env_logger` builder that [`init`] initializes globally,
     /// configured to write to stdout with the level filter and the line
     /// formatter.
     ///
@@ -167,8 +167,8 @@ mod tests {
         }
     }
 
-    /// Builds the same pipeline `init` installs, but writing to a capture
-    /// buffer instead of being installed as the global logger.
+    /// Builds the same pipeline `init` initializes, but writing to a capture
+    /// buffer instead of becoming the global logger.
     fn piped(builder: &LoggerBuilder, write_style: WriteStyle) -> (env_logger::Logger, Capture) {
         let capture = Capture::default();
         let env_logger = builder
@@ -282,10 +282,10 @@ mod tests {
     }
 
     #[test]
-    fn test_init_fails_once_a_logger_is_installed() {
+    fn test_init_fails_once_a_logger_is_initialized() {
         let builder = LoggerBuilder::new();
 
-        // The first call may fail if a parallel test installed a logger
+        // The first call may fail if a parallel test initialized a logger
         // first; either way, a global logger exists afterwards.
         let _ = builder.init();
         let second = builder.init();
