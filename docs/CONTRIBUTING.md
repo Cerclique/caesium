@@ -16,6 +16,23 @@ You need a stable Rust toolchain. The minimum supported Rust version (MSRV) is
 the `rust-version` in [`Cargo.toml`](../Cargo.toml); don't use language or library
 features newer than it.
 
+### Dev container
+
+The repository has a [dev container](../.devcontainer/devcontainer.json) with
+everything below preinstalled: the stable toolchain, rust-analyzer, prek,
+cargo-deny, cargo-semver-checks and git-cliff, with the Git hooks enabled.
+
+- **GitHub Codespaces**: [open lithium in a codespace](https://codespaces.new/Cerclique/lithium),
+  nothing to install.
+- **VS Code**: with Docker and the Dev Containers extension, run
+  *Dev Containers: Reopen in Container*.
+
+The tool versions are pinned in
+[`.devcontainer/post-create.sh`](../.devcontainer/post-create.sh).
+
+Working on your own machine instead? Install the tools you need as described
+below.
+
 ### Git hooks
 
 The repository ships Git hooks in [`.pre-commit-config.yaml`](../.pre-commit-config.yaml),
