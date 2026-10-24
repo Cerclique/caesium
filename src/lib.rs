@@ -1,5 +1,7 @@
 #![doc = include_str!("../README.md")]
 
+use std::time::{Duration, Instant};
+
 use thiserror::Error;
 
 mod format;
@@ -101,8 +103,8 @@ impl LoggerBuilder {
 
     /// Initializes the global logger with a custom formatter that includes
     /// elapsed time, log level, target and, unless turned off, source
-    /// location. Elapsed time on
-    /// each formatted line is measured from the moment this method runs.
+    /// location. Elapsed time on each formatted line is measured from the
+    /// moment this method runs.
     ///
     /// # Errors
     ///
@@ -110,20 +112,25 @@ impl LoggerBuilder {
     /// initialized, whether by an earlier call to this method or by another
     /// crate, this returns [`LoggerError::InitError`] and changes nothing.
     pub fn init(&self) -> Result<(), LoggerError> {
-        self.env_builder().try_init()?;
+        let start = Instant::now();
+        self.env_builder(move || start.elapsed()).try_init()?;
         Ok(())
     }
 
     /// Returns the `env_logger` builder that [`init`] initializes globally,
     /// configured to write to stdout with the level filter and the line
-    /// formatter.
+    /// formatter. `elapsed` returns the elapsed time shown on each line.
     ///
-    /// Kept separate from [`init`] so tests can redirect it to a pipe and
-    /// exercise the whole pipeline without touching the global logger.
+    /// Kept separate from [`init`] so tests can redirect it to a pipe, fix the
+    /// elapsed time and exercise the whole pipeline without touching the
+    /// global logger.
     ///
     /// [`init`]: LoggerBuilder::init
-    fn env_builder(&self) -> env_logger::Builder {
-        let formatter = format::LineFormatter::new(self.format);
+    fn env_builder(
+        &self,
+        elapsed: impl Fn() -> Duration + Send + Sync + 'static,
+    ) -> env_logger::Builder {
+        let formatter = format::LineFormatter::new(self.format, elapsed);
 
         let mut builder = env_logger::Builder::new();
         builder.target(env_logger::Target::Stdout);
@@ -182,11 +189,16 @@ mod tests {
     }
 
     /// Builds the same pipeline `init` initializes, but writing to a capture
-    /// buffer instead of becoming the global logger.
-    fn piped(builder: &LoggerBuilder, write_style: WriteStyle) -> (env_logger::Logger, Capture) {
+    /// buffer instead of becoming the global logger, with every line showing
+    /// `elapsed`.
+    fn piped(
+        builder: &LoggerBuilder,
+        write_style: WriteStyle,
+        elapsed: Duration,
+    ) -> (env_logger::Logger, Capture) {
         let capture = Capture::default();
         let env_logger = builder
-            .env_builder()
+            .env_builder(move || elapsed)
             .target(Target::Pipe(Box::new(capture.clone())))
             .write_style(write_style)
             .build();
@@ -205,29 +217,13 @@ mod tests {
         );
     }
 
-    /// Strips the elapsed-time field, which depends on wall-clock time,
-    /// after checking it has the `[HH:MM:SS.sss` shape.
-    fn without_elapsed(output: &str) -> Vec<&str> {
-        output
-            .lines()
-            .map(|line| {
-                let (elapsed, rest) = line.split_once(" | ").expect("missing elapsed field");
-                let shape: String = elapsed
-                    .chars()
-                    .map(|c| if c.is_ascii_digit() { '0' } else { c })
-                    .collect();
-                assert_eq!(
-                    shape, "[00:00:00.000",
-                    "unexpected elapsed field {elapsed:?}"
-                );
-                rest
-            })
-            .collect()
+    fn lines(capture: &Capture) -> Vec<String> {
+        capture.contents().lines().map(str::to_owned).collect()
     }
 
     #[test]
     fn test_default_level_filters_below_info() {
-        let (log, capture) = piped(&LoggerBuilder::new(), WriteStyle::Never);
+        let (log, capture) = piped(&LoggerBuilder::new(), WriteStyle::Never, Duration::ZERO);
 
         emit(&log, Level::Trace, "dropped");
         emit(&log, Level::Debug, "dropped");
@@ -235,10 +231,10 @@ mod tests {
         emit(&log, Level::Error, "kept too");
 
         assert_eq!(
-            without_elapsed(&capture.contents()),
+            lines(&capture),
             [
-                " INFO | my_crate | src/lib.rs:42 ] kept",
-                "ERROR | my_crate | src/lib.rs:42 ] kept too",
+                "[00:00:00.000 |  INFO | my_crate | src/lib.rs:42 ] kept",
+                "[00:00:00.000 | ERROR | my_crate | src/lib.rs:42 ] kept too",
             ]
         );
     }
@@ -246,47 +242,63 @@ mod tests {
     #[test]
     fn test_explicit_level_is_applied() {
         let builder = LoggerBuilder::new().level(LevelFilter::Warn);
-        let (log, capture) = piped(&builder, WriteStyle::Never);
+        let (log, capture) = piped(&builder, WriteStyle::Never, Duration::ZERO);
 
         emit(&log, Level::Info, "dropped");
         emit(&log, Level::Warn, "kept");
 
         assert_eq!(
-            without_elapsed(&capture.contents()),
-            [" WARN | my_crate | src/lib.rs:42 ] kept"]
+            lines(&capture),
+            ["[00:00:00.000 |  WARN | my_crate | src/lib.rs:42 ] kept"]
         );
     }
 
     #[test]
     fn test_trace_level_emits_everything() {
         let builder = LoggerBuilder::new().level(LevelFilter::Trace);
-        let (log, capture) = piped(&builder, WriteStyle::Never);
+        let (log, capture) = piped(&builder, WriteStyle::Never, Duration::ZERO);
 
         emit(&log, Level::Trace, "finest");
 
         assert_eq!(
-            without_elapsed(&capture.contents()),
-            ["TRACE | my_crate | src/lib.rs:42 ] finest"]
+            lines(&capture),
+            ["[00:00:00.000 | TRACE | my_crate | src/lib.rs:42 ] finest"]
         );
     }
 
     #[test]
     fn test_source_location_off_omits_the_segment() {
         let builder = LoggerBuilder::new().source_location(false);
-        let (log, capture) = piped(&builder, WriteStyle::Never);
+        let (log, capture) = piped(&builder, WriteStyle::Never, Duration::ZERO);
 
         emit(&log, Level::Info, "short");
 
         assert_eq!(
-            without_elapsed(&capture.contents()),
-            [" INFO | my_crate ] short"]
+            lines(&capture),
+            ["[00:00:00.000 |  INFO | my_crate ] short"]
+        );
+    }
+
+    #[test]
+    fn test_elapsed_time_comes_from_the_clock() {
+        let (log, capture) = piped(
+            &LoggerBuilder::new(),
+            WriteStyle::Never,
+            Duration::from_millis(125_120),
+        );
+
+        emit(&log, Level::Info, "later");
+
+        assert_eq!(
+            lines(&capture),
+            ["[00:02:05.120 |  INFO | my_crate | src/lib.rs:42 ] later"]
         );
     }
 
     #[test]
     fn test_color_enabled_styles_the_line() {
         let builder = LoggerBuilder::new().color(true);
-        let (log, capture) = piped(&builder, WriteStyle::Always);
+        let (log, capture) = piped(&builder, WriteStyle::Always, Duration::ZERO);
 
         emit(&log, Level::Error, "styled");
 
@@ -295,13 +307,13 @@ mod tests {
             output.starts_with('\x1b'),
             "expected ANSI styling, got {output:?}"
         );
-        assert!(output.contains("ERROR | my_crate | src/lib.rs:42 ] styled"));
+        assert!(output.contains("[00:00:00.000 | ERROR | my_crate | src/lib.rs:42 ] styled"));
     }
 
     #[test]
     fn test_color_disabled_writes_plain_text() {
         // Even when the terminal allows styling, color(false) must not emit it.
-        let (log, capture) = piped(&LoggerBuilder::new(), WriteStyle::Always);
+        let (log, capture) = piped(&LoggerBuilder::new(), WriteStyle::Always, Duration::ZERO);
 
         emit(&log, Level::Error, "plain");
 

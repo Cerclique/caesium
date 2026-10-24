@@ -4,8 +4,8 @@
 //! [`LineFormat::line`] turns the elapsed time and a [`log::Record`] into a
 //! [`Display`] value that renders the exact formatted line `lithium` writes for
 //! that record, without allocating. [`LineFormatter`] is a thin adapter that
-//! binds the origin instant and a line format, and hands each formatted line to
-//! the `env_logger` formatter buffer.
+//! binds a clock and a line format, and hands each formatted line to the
+//! `env_logger` formatter buffer.
 //!
 //! A formatted line has a fixed shape:
 //!
@@ -21,7 +21,7 @@
 
 use std::fmt::{self, Display};
 use std::io::Write;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use log::Record;
 
@@ -61,24 +61,22 @@ impl LineFormat {
     }
 }
 
-/// Binds the origin instant and the line format for a running logger, and
-/// writes formatted lines into the `env_logger` formatter buffer.
+/// Binds a clock and the line format for a running logger, and writes
+/// formatted lines into the `env_logger` formatter buffer.
 ///
-/// The origin instant is captured in [`new`], which [`LoggerBuilder::init`] calls,
-/// so every formatted line measures time from the moment `init` runs.
+/// The clock returns the elapsed time shown on each line. [`LoggerBuilder::init`]
+/// passes one that measures from the moment `init` runs; tests pass a fixed
+/// duration.
 ///
 /// [`LoggerBuilder::init`]: crate::LoggerBuilder::init
-pub(crate) struct LineFormatter {
-    start: Instant,
+pub(crate) struct LineFormatter<C> {
     format: LineFormat,
+    elapsed: C,
 }
 
-impl LineFormatter {
-    pub(crate) fn new(format: LineFormat) -> Self {
-        Self {
-            start: Instant::now(),
-            format,
-        }
+impl<C: Fn() -> Duration> LineFormatter<C> {
+    pub(crate) fn new(format: LineFormat, elapsed: C) -> Self {
+        Self { format, elapsed }
     }
 
     /// Writes `record` as a formatted line to the `env_logger` formatter
@@ -88,7 +86,7 @@ impl LineFormatter {
         buf: &mut env_logger::fmt::Formatter,
         record: &Record<'_>,
     ) -> std::io::Result<()> {
-        let line = self.format.line(self.start.elapsed(), record);
+        let line = self.format.line((self.elapsed)(), record);
 
         if self.format.color {
             let style = buf.default_level_style(record.level());
