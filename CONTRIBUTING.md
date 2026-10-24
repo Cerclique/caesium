@@ -15,6 +15,28 @@ You need a stable Rust toolchain. The minimum supported Rust version (MSRV) is
 the `rust-version` in [`Cargo.toml`](Cargo.toml); don't use language or library
 features newer than it.
 
+### Git hooks
+
+The repository ships Git hooks in [`.pre-commit-config.yaml`](.pre-commit-config.yaml),
+run by [prek](https://github.com/j178/prek). Install prek (e.g.
+`cargo install --locked prek`; see its README for other methods), then enable the
+hooks once per clone:
+
+```sh
+prek install
+```
+
+- **pre-commit**: trailing whitespace, final newlines, line endings, YAML/TOML
+  syntax, merge-conflict markers, `cargo fmt` and `cargo clippy`. Fixers rewrite
+  the files and fail the commit; review the changes, `git add` them and commit
+  again.
+- **pre-push**: `cargo test`.
+
+Run every hook on the whole tree with `prek run --all-files`. Skip them for one
+commit with `git commit --no-verify`; CI runs the same checks anyway.
+
+### Checks
+
 Before opening a pull request, run the same checks as CI:
 
 ```sh
