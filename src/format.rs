@@ -7,17 +7,8 @@
 //! binds a clock and a line format, and hands each formatted line to the
 //! `env_logger` formatter buffer.
 //!
-//! A formatted line has a fixed shape:
-//!
-//! ```text
-//! [00:02:05.120 | ERROR | my_crate | src/lib.rs:42 ] something went wrong
-//! ```
-//!
-//! where the elapsed time is zero-padded `HH:MM:SS.sss` (hours keep growing
-//! past 99) and the level is right-aligned in a 5-column field. The source
-//! location segment (`| src/lib.rs:42`) is left out when it is turned off or
-//! the record has no file, and shows only the file when the record has no
-//! line.
+//! The line layout is described once, in the crate docs' [Format](crate#format)
+//! section; the tests below pin it down exactly.
 
 use std::fmt::{self, Display};
 use std::io::Write;
@@ -45,13 +36,9 @@ impl Default for LineFormat {
 }
 
 impl LineFormat {
-    /// Renders one log record as a formatted line, without color.
-    ///
-    /// The elapsed time is shown as zero-padded `HH:MM:SS.sss` truncated to the
-    /// millisecond. Hours are at least two digits and keep growing past 99. The
-    /// level is right-aligned in a 5-column field. When source location is on
-    /// and the record has a file, the line shows `file:line`, or just `file`
-    /// when the record has no line; otherwise the segment is left out.
+    /// Renders one log record as a formatted line, laid out as described in
+    /// [Format](crate#format). Color is not applied here: [`LineFormatter`]
+    /// wraps the line in the level style.
     pub(crate) fn line<'a>(self, elapsed: Duration, record: &'a Record<'a>) -> FormattedLine<'a> {
         FormattedLine {
             format: self,

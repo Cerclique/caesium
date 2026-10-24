@@ -33,13 +33,8 @@ pub enum LoggerError {
 ///
 /// `LoggerBuilder` uses a fluent builder pattern. Construct it via [`new`],
 /// configure it with [`level`], [`color`] and [`source_location`], then
-/// initialize it with [`init`].
-///
-/// # stdout format
-///
-/// ```text
-/// [00:02:05.120 | ERROR | my_crate | src/lib.rs:42 ] something went wrong
-/// ```
+/// initialize it with [`init`]. Each line is written to stdout as described in
+/// [Format](crate#format).
 ///
 /// # Example
 ///
@@ -101,9 +96,8 @@ impl LoggerBuilder {
         self
     }
 
-    /// Initializes the global logger with a custom formatter that includes
-    /// elapsed time, log level, target and, unless turned off, source
-    /// location. Elapsed time on each formatted line is measured from the
+    /// Initializes the global logger, which writes lines as described in
+    /// [Format](crate#format). Elapsed time on each line is measured from the
     /// moment this method runs.
     ///
     /// # Errors
