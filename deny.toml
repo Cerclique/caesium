@@ -1,0 +1,21 @@
+# cargo-deny configuration, checked in CI.
+# https://embarkstudios.github.io/cargo-deny/checks/cfg.html
+#
+# Run locally: cargo deny check
+
+[graph]
+all-features = true
+
+[advisories]
+ignore = []
+
+[licenses]
+allow = ["Apache-2.0", "MIT", "Unicode-3.0"]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
