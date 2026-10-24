@@ -1,7 +1,7 @@
 # Lithium
 
 [![CI](https://github.com/Cerclique/lithium/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/Cerclique/lithium/actions/workflows/rust.yml)
-[![MSRV](https://img.shields.io/badge/MSRV-1.85-blue)](./Cargo.toml)
+[![MSRV](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FCerclique%2Flithium%2Fmain%2FCargo.toml&query=%24.package.rust-version&label=MSRV)](./Cargo.toml)
 [![License](https://img.shields.io/github/license/Cerclique/lithium)](./LICENSE)
 
 A logger wrapper with elapsed time tracking and colorized output built on [env_logger], [log], and [thiserror].
@@ -23,7 +23,8 @@ unrelated project), so depend on it from Git, pinned to a release tag:
 lithium = { git = "https://github.com/Cerclique/lithium", tag = "v0.2.0" }
 ```
 
-It requires Rust 1.85 or newer.
+The minimum supported Rust version is the `rust-version` in
+[`Cargo.toml`](./Cargo.toml), shown in the MSRV badge above.
 
 ## Usage
 
