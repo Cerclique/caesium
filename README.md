@@ -13,6 +13,7 @@ A logger wrapper with elapsed time tracking and colorized output built on [env_l
 - Custom format: `[HH:MM:SS.sss | LEVEL | target | file:line ] message`
 - Programmatic log level configuration via `LoggerBuilder`
 - Colorized output toggle via `color`, disabled by default
+- Source location toggle via `source_location`, enabled by default
 
 ## Installation
 
@@ -52,6 +53,7 @@ Records logged through `log` by your dependencies go through the same logger.
 
 The default minimum level is `Info`. Override it with `level`.
 Colorized output is disabled by default. Enable it with `color`.
+Source location is shown by default. Hide it with `source_location(false)`.
 
 ### Errors
 
@@ -113,7 +115,18 @@ Every line is written to stdout in a fixed shape:
   growing past 99 (`100:00:00.000`) rather than wrapping.
 - **Level**: right-aligned in a 5-column field.
 - **Target**: the record's target, usually the module path.
-- **Source location**: `file:line`, or `unknown:0` when the record has none.
+- **Source location**: `file:line`, or just `file` when the record has no
+  line. Records from dependencies show the full path the compiler saw, often
+  an absolute path into the Cargo registry. The segment is left out when
+  `source_location(false)` is set or the record has no file:
+
+  ```text
+  [00:02:05.120 | ERROR | my_crate ] something went wrong
+  ```
+
+Key-value fields attached through the `log` crate's `kv` feature
+(`info!(user_id = 42; "logged in")`) are not shown; only the message is
+written.
 
 ## Notes
 

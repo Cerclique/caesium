@@ -16,14 +16,22 @@ process, whoever attempts it.
 _Avoid_: Install, setup, registration
 
 **Logger builder**:
-The configuration of the global logger (minimum level and color) before
-initialization. It is not itself a logger and never handles a record.
+The configuration of the global logger (minimum level, color and whether
+lines show source location) before initialization. It is not itself a logger
+and never handles a record.
 _Avoid_: Logger, config
 
 **Line**:
 The text written for one log record: elapsed time, level, target, source
-location and message, in a fixed shape.
+location and message, in a fixed shape. Source location is shown by default; it
+is left out when turned off or when the record has none, and nothing else in
+the shape changes.
 _Avoid_: Entry, log entry, output
+
+**Source location**:
+The file and line in the code that emitted a log record. It is there for a
+developer to jump to that code, so it is optional in a line.
+_Avoid_: Location, file:line, callsite
 
 **Elapsed time**:
 The time between initialization and a record being written, shown at the

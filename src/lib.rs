@@ -30,7 +30,8 @@ pub enum LoggerError {
 /// optional colorized output on top of [`env_logger`].
 ///
 /// `LoggerBuilder` uses a fluent builder pattern. Construct it via [`new`],
-/// configure it with [`level`] and [`color`], then initialize it with [`init`].
+/// configure it with [`level`], [`color`] and [`source_location`], then
+/// initialize it with [`init`].
 ///
 /// # stdout format
 ///
@@ -55,11 +56,13 @@ pub enum LoggerError {
 /// [`new`]: LoggerBuilder::new
 /// [`level`]: LoggerBuilder::level
 /// [`color`]: LoggerBuilder::color
+/// [`source_location`]: LoggerBuilder::source_location
 /// [`init`]: LoggerBuilder::init
 #[must_use = "call .init() to enable logging"]
 pub struct LoggerBuilder {
     level: LevelFilter,
     color: bool,
+    source_location: bool,
 }
 
 impl Default for LoggerBuilder {
@@ -69,12 +72,13 @@ impl Default for LoggerBuilder {
 }
 
 impl LoggerBuilder {
-    /// Creates a builder with the default level of [`LevelFilter::Info`] and
-    /// color disabled.
+    /// Creates a builder with the default level of [`LevelFilter::Info`],
+    /// color disabled and source location shown.
     pub fn new() -> Self {
         Self {
             level: LevelFilter::Info,
             color: false,
+            source_location: true,
         }
     }
 
@@ -90,8 +94,16 @@ impl LoggerBuilder {
         self
     }
 
+    /// Shows or hides the source location (`file:line`) on each line. Shown
+    /// by default. Returns `self` for chaining.
+    pub fn source_location(mut self, source_location: bool) -> Self {
+        self.source_location = source_location;
+        self
+    }
+
     /// Initializes the global logger with a custom formatter that includes
-    /// elapsed time, log level, target, file, and line number. Elapsed time on
+    /// elapsed time, log level, target and, unless turned off, source
+    /// location. Elapsed time on
     /// each formatted line is measured from the moment this method runs.
     ///
     /// # Errors
@@ -113,7 +125,7 @@ impl LoggerBuilder {
     ///
     /// [`init`]: LoggerBuilder::init
     fn env_builder(&self) -> env_logger::Builder {
-        let formatter = format::LineFormatter::new(self.color);
+        let formatter = format::LineFormatter::new(self.color, self.source_location);
 
         let mut builder = env_logger::Builder::new();
         builder.target(env_logger::Target::Stdout);
@@ -257,6 +269,19 @@ mod tests {
         assert_eq!(
             without_elapsed(&capture.contents()),
             ["TRACE | my_crate | src/lib.rs:42 ] finest"]
+        );
+    }
+
+    #[test]
+    fn test_source_location_off_omits_the_segment() {
+        let builder = LoggerBuilder::new().source_location(false);
+        let (log, capture) = piped(&builder, WriteStyle::Never);
+
+        emit(&log, Level::Info, "short");
+
+        assert_eq!(
+            without_elapsed(&capture.contents()),
+            [" INFO | my_crate ] short"]
         );
     }
 
