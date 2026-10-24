@@ -6,12 +6,12 @@ A logger wrapper with elapsed time tracking and colorized output built on [env_l
 
 - Elapsed time tracking per log entry
 - Custom format: `[elapsed_ms | LEVEL | target | file:line ] message`
-- Programmatic log level configuration via [`LoggerBuilder`]
-- Colorized output toggle via [`color`], disabled by default
+- Programmatic log level configuration via `LoggerBuilder`
+- Colorized output toggle via `color`, disabled by default
 
 ## Usage
 
-Configure a [`LoggerBuilder`], then call [`init`] once to initialize it as
+Configure a `LoggerBuilder`, then call `init` once to initialize it as
 the global logger:
 
 ```rust
@@ -25,16 +25,11 @@ fn main() {
 }
 ```
 
-The default minimum level is `Info`. Override it with [`level`].
-Colorized output is disabled by default. Enable it with [`color`].
+The default minimum level is `Info`. Override it with `level`.
+Colorized output is disabled by default. Enable it with `color`.
 
-Only one global logger can exist per process, so [`init`] returns an error if
+Only one global logger can exist per process, so `init` returns an error if
 one is already initialized, whether by an earlier call or by another crate.
-
-[`LoggerBuilder`]: https://docs.rs/lithium/latest/lithium/struct.LoggerBuilder.html
-[`init`]: https://docs.rs/lithium/latest/lithium/struct.LoggerBuilder.html#method.init
-[`level`]: https://docs.rs/lithium/latest/lithium/struct.LoggerBuilder.html#method.level
-[`color`]: https://docs.rs/lithium/latest/lithium/struct.LoggerBuilder.html#method.color
 
 ## Log Levels
 
@@ -60,9 +55,9 @@ Set the minimum level via `LoggerBuilder::level(LevelFilter::Level)`. Messages a
 
 ## Notes
 
-- [`LoggerBuilder::new`][LoggerBuilder] reads no environment variables, so
-  `RUST_LOG` has no effect. The minimum level is set only via [`level`].
-- [`color(true)`][color] does not force color. It resolves through
+- `LoggerBuilder::new` reads no environment variables, so
+  `RUST_LOG` has no effect. The minimum level is set only via `level`.
+- `color(true)` does not force color. It resolves through
   `env_logger`'s terminal detection, so styling is stripped when the output is
   not a TTY (for example, when piped or redirected). It means "allow color
   when the terminal supports it".
