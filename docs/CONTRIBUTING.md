@@ -12,12 +12,12 @@ instead.
 ## Development
 
 You need a stable Rust toolchain. The minimum supported Rust version (MSRV) is
-the `rust-version` in [`Cargo.toml`](Cargo.toml); don't use language or library
+the `rust-version` in [`Cargo.toml`](../Cargo.toml); don't use language or library
 features newer than it.
 
 ### Git hooks
 
-The repository ships Git hooks in [`.pre-commit-config.yaml`](.pre-commit-config.yaml),
+The repository ships Git hooks in [`.pre-commit-config.yaml`](../.pre-commit-config.yaml),
 run by [prek](https://github.com/j178/prek). Install prek (e.g.
 `cargo install --locked prek`; see its README for other methods), then enable the
 hooks once per clone:
@@ -58,7 +58,7 @@ doctests, so keep them compiling.
 
 [`GLOSSARY.md`](GLOSSARY.md) defines the terms used in code and docs (global
 logger, initialization, line, elapsed time, ...); please stick to them.
-Significant design decisions are recorded as ADRs in [`docs/adr/`](docs/adr/).
+Significant design decisions are recorded as ADRs in [`docs/adr/`](adr/).
 
 ## Pull requests
 
@@ -78,7 +78,7 @@ Significant design decisions are recorded as ADRs in [`docs/adr/`](docs/adr/).
   breaking change with `!` in the PR title (e.g. `feat!: ...`), or with a
   `BREAKING CHANGE:` footer in a branch commit (one in the PR description is
   not carried into the history).
-- Don't edit `CHANGELOG.md` by hand: it is generated from the commit history by
+- Don't edit `docs/CHANGELOG.md` by hand: it is generated from the commit history by
   [git-cliff](https://git-cliff.org) when a release is cut.
 - The `semver` CI job compares the public API with the latest release. A red
   `semver` job is not a blocker; it signals that the next release must be a
@@ -90,7 +90,7 @@ Releases are cut by the maintainer, also through a pull request:
 
 1. On a `release/vX.Y.Z` branch, bump `version` in `Cargo.toml` (and
    `Cargo.lock`) and the `tag = "vX.Y.Z"` in the README Installation section.
-2. Regenerate the changelog: `git cliff --tag vX.Y.Z -o CHANGELOG.md`.
+2. Regenerate the changelog: `git cliff --tag vX.Y.Z -o docs/CHANGELOG.md`.
 3. Commit as `chore: release vX.Y.Z` and open a PR.
 4. Once it is merged, tag the merge commit on `main` and push the tag:
 
@@ -104,6 +104,6 @@ Releases are cut by the maintainer, also through a pull request:
 ## License
 
 By contributing, you agree that your contributions are licensed under the
-[MIT License](LICENSE).
+[MIT License](../LICENSE).
 
 [new-issue]: https://github.com/Cerclique/lithium/issues/new/choose
