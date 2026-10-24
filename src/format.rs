@@ -126,7 +126,7 @@ mod tests {
             .build();
 
         assert_eq!(
-            format_line(987654, &record).to_string(),
+            format_line(987_654, &record).to_string(),
             "[   987654 |  WARN | my_crate | src/lib.rs:7 ] still going"
         );
     }

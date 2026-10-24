@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use thiserror::Error;
 
 mod format;
@@ -91,6 +93,8 @@ impl LoggerBuilder {
     /// Initializes the global logger with a custom formatter that includes
     /// elapsed time, log level, target, file, and line number. Elapsed time on
     /// each formatted line is measured from the moment this method runs.
+    ///
+    /// # Errors
     ///
     /// Only one global logger can exist per process. If one is already
     /// initialized, whether by an earlier call to this method or by another
