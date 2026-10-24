@@ -125,12 +125,12 @@ Every line is written to stdout in a fixed shape:
 
 ## Changelog
 
-See [CHANGELOG.md](https://github.com/Cerclique/lithium/blob/main/CHANGELOG.md).
+See [CHANGELOG.md](https://github.com/Cerclique/lithium/blob/main/docs/CHANGELOG.md).
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/Cerclique/lithium/blob/main/CONTRIBUTING.md).
-To report a vulnerability, see [SECURITY.md](https://github.com/Cerclique/lithium/blob/main/SECURITY.md).
+See [CONTRIBUTING.md](https://github.com/Cerclique/lithium/blob/main/docs/CONTRIBUTING.md).
+To report a vulnerability, see [SECURITY.md](https://github.com/Cerclique/lithium/blob/main/docs/SECURITY.md).
 
 ## License
 

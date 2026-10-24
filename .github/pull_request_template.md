@@ -1,6 +1,6 @@
 <!--
 The PR title becomes the squash-commit title and must be a Conventional
-Commit, e.g. `feat: add ...`, `fix: ...`, `docs: ...`. See CONTRIBUTING.md.
+Commit, e.g. `feat: add ...`, `fix: ...`, `docs: ...`. See docs/CONTRIBUTING.md.
 -->
 
 ## Summary
