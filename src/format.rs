@@ -24,10 +24,10 @@ use log::Record;
 /// Binds the origin instant and the colour flag for a running logger, and
 /// writes formatted lines into the `env_logger` formatter buffer.
 ///
-/// The origin instant is captured in [`new`], which [`Logger::init`] calls,
+/// The origin instant is captured in [`new`], which [`LoggerBuilder::init`] calls,
 /// so every formatted line measures time from the moment `init` runs.
 ///
-/// [`Logger::init`]: crate::Logger::init
+/// [`LoggerBuilder::init`]: crate::LoggerBuilder::init
 pub(crate) struct LineFormatter {
     start: Instant,
     color: bool,
@@ -43,7 +43,11 @@ impl LineFormatter {
 
     /// Writes `record` as a formatted line to the `env_logger` formatter
     /// buffer, styled with the level colour when colour is enabled.
-    pub(crate) fn format(&self, buf: &mut env_logger::fmt::Formatter, record: &Record<'_>) -> std::io::Result<()> {
+    pub(crate) fn format(
+        &self,
+        buf: &mut env_logger::fmt::Formatter,
+        record: &Record<'_>,
+    ) -> std::io::Result<()> {
         let line = format_line(self.start.elapsed().as_millis(), record);
 
         if self.color {

@@ -11,30 +11,28 @@ A logger wrapper with elapsed time tracking and colorized output built on [env_l
 
 ## Usage
 
-Create a [`LoggerBuilder`] and call [`build`] to produce a [`Logger`],
-then call [`init`] once:
+Configure a [`LoggerBuilder`], then call [`init`] once to install it as the
+global logger:
 
 ```rust
 use lithium::{LoggerBuilder, LevelFilter};
 
 fn main() {
-    let logger = LoggerBuilder::new()
+    LoggerBuilder::new()
         .level(LevelFilter::Debug)
-        .build();
-
-    logger.init().expect("failed to init logger");
+        .init()
+        .expect("failed to init logger");
 }
 ```
 
 The default minimum level is `Info`. Override it with [`level`].
 Colorized output is disabled by default. Enable it with [`color`].
 
-Do not create multiple [`Logger`] instances or call [`init`] more than once.
-`env_logger` is global, so subsequent calls will fail.
+Only one global logger can exist per process, so [`init`] returns an error if
+one is already installed, whether by an earlier call or by another crate.
 
 [`LoggerBuilder`]: https://docs.rs/lithium/latest/lithium/struct.LoggerBuilder.html
-[`build`]: https://docs.rs/lithium/latest/lithium/struct.LoggerBuilder.html#method.build
-[`init`]: https://docs.rs/lithium/latest/lithium/struct.Logger.html#method.init
+[`init`]: https://docs.rs/lithium/latest/lithium/struct.LoggerBuilder.html#method.init
 [`level`]: https://docs.rs/lithium/latest/lithium/struct.LoggerBuilder.html#method.level
 [`color`]: https://docs.rs/lithium/latest/lithium/struct.LoggerBuilder.html#method.color
 

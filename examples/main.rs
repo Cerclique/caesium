@@ -1,12 +1,9 @@
 use lithium::{LevelFilter, LoggerBuilder, debug, error, info, trace, warn};
 
 fn main() {
-    let logger = LoggerBuilder::new()
-        .level(LevelFilter::Debug)
-        .color(true)
-        .build();
+    let builder = LoggerBuilder::new().level(LevelFilter::Debug).color(true);
 
-    logger.init().expect("logger init failed");
+    builder.init().expect("logger init failed");
 
     info!("Logger initialized successfully!");
     debug!("This is a debug message");
@@ -21,8 +18,8 @@ fn main() {
     std::thread::sleep(std::time::Duration::from_millis(250));
     warn!("Another warning after more time has passed");
 
-    // Calling init again returns an AlreadyInitialized error
-    match logger.init() {
+    // Calling init again fails: a global logger is already installed
+    match builder.init() {
         Err(e) => println!("Expected init error: {e}"),
         Ok(()) => unreachable!("init should not succeed a second time"),
     }
