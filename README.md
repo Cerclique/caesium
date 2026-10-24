@@ -10,7 +10,7 @@ A logger wrapper with elapsed time tracking and colorized output built on [env_l
 ## Features
 
 - Elapsed time tracking per line
-- Custom format: `[elapsed_ms | LEVEL | target | file:line ] message`
+- Custom format: `[HH:MM:SS.sss | LEVEL | target | file:line ] message`
 - Programmatic log level configuration via `LoggerBuilder`
 - Colorized output toggle via `color`, disabled by default
 
@@ -73,12 +73,12 @@ cargo run --example main
 ```
 
 ```text
-[        0 |  INFO | main | examples/main.rs:8 ] Logger initialized successfully!
-[        0 | DEBUG | main | examples/main.rs:9 ] This is a debug message
-[        0 |  WARN | main | examples/main.rs:11 ] This is a warning message
-[        0 | ERROR | main | examples/main.rs:12 ] This is an error message
-[      150 |  INFO | main | examples/main.rs:16 ] After a short delay
-[      400 |  WARN | main | examples/main.rs:19 ] Another warning after more time has passed
+[00:00:00.000 |  INFO | main | examples/main.rs:11 ] Logger initialized successfully!
+[00:00:00.000 | DEBUG | main | examples/main.rs:12 ] This is a debug message
+[00:00:00.000 |  WARN | main | examples/main.rs:14 ] This is a warning message
+[00:00:00.000 | ERROR | main | examples/main.rs:15 ] This is an error message
+[00:00:00.150 |  INFO | main | examples/main.rs:19 ] After a short delay
+[00:00:00.400 |  WARN | main | examples/main.rs:22 ] Another warning after more time has passed
 Expected init error: failed to initialize logger: attempted to set a logger after the logging system was already initialized
 ```
 
@@ -105,11 +105,12 @@ Set the minimum level via `LoggerBuilder::level(LevelFilter::Level)`. Messages a
 Every line is written to stdout in a fixed shape:
 
 ```text
-[      120 | ERROR | my_crate | src/lib.rs:42 ] something went wrong
+[00:02:05.120 | ERROR | my_crate | src/lib.rs:42 ] something went wrong
 ```
 
-- **Elapsed time**: milliseconds since `init` ran, right-aligned in a field at
-  least 9 columns wide.
+- **Elapsed time**: time since `init` ran, as zero-padded `HH:MM:SS.sss`
+  truncated to the millisecond. Hours are at least two digits and keep
+  growing past 99 (`100:00:00.000`) rather than wrapping.
 - **Level**: right-aligned in a 5-column field.
 - **Target**: the record's target, usually the module path.
 - **Source location**: `file:line`, or `unknown:0` when the record has none.
