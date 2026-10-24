@@ -101,7 +101,8 @@ impl LoggerBuilder {
     }
 
     /// Returns the `env_logger` builder that [`init`] installs globally,
-    /// configured with the level filter and the line formatter.
+    /// configured to write to stdout with the level filter and the line
+    /// formatter.
     ///
     /// Kept separate from [`init`] so tests can redirect it to a pipe and
     /// exercise the whole pipeline without touching the global logger.
@@ -111,6 +112,7 @@ impl LoggerBuilder {
         let formatter = format::LineFormatter::new(self.color);
 
         let mut builder = env_logger::Builder::new();
+        builder.target(env_logger::Target::Stdout);
         builder.filter_level(self.level);
         builder.format(move |buf, record| formatter.format(buf, record));
         builder
