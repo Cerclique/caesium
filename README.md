@@ -20,7 +20,7 @@ unrelated project), so depend on it from Git, pinned to a release tag:
 
 ```toml
 [dependencies]
-lithium = { git = "https://github.com/Cerclique/lithium", tag = "v0.2.0" }
+lithium = { git = "https://github.com/Cerclique/lithium", tag = "v0.2.1" }
 ```
 
 The minimum supported Rust version is the `rust-version` in
