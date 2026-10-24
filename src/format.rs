@@ -1,8 +1,8 @@
 //! Formatting of log records into formatted lines.
 //!
 //! [`format_line`] is the pure core: given the elapsed milliseconds and a
-//! [`log::Record`], it returns the exact formatted line `lithium` writes for
-//! that record. [`LineFormatter`] is a thin adapter that binds the origin
+//! [`log::Record`], it returns a [`Display`] value that renders the exact
+//! formatted line `lithium` writes for that record, without allocating. [`LineFormatter`] is a thin adapter that binds the origin
 //! instant and the colour flag, and hands each formatted line to the
 //! `env_logger` formatter buffer.
 //!
@@ -16,6 +16,7 @@
 //! and the level is right-aligned in a 5-column field. Records without source
 //! location render as `unknown:0`.
 
+use std::fmt::{self, Display};
 use std::io::Write;
 use std::time::Instant;
 
@@ -54,7 +55,7 @@ impl LineFormatter {
             let style = buf.default_level_style(record.level());
             writeln!(buf, "{style}{line}{style:#}")
         } else {
-            writeln!(buf, "{}", line)
+            writeln!(buf, "{line}")
         }
     }
 }
@@ -65,15 +66,31 @@ impl LineFormatter {
 /// [`LineFormatter::new`] ran, right-aligned in a 9-column minimum-width
 /// field. The level is right-aligned in a 5-column field. A record without
 /// source location renders as `unknown:0`.
-pub(crate) fn format_line(elapsed_ms: u128, record: &Record<'_>) -> String {
-    format!(
-        "[{elapsed_ms:>9} | {:>5} | {} | {}:{} ] {}",
-        record.level(),
-        record.target(),
-        record.file().unwrap_or("unknown"),
-        record.line().unwrap_or(0),
-        record.args(),
-    )
+pub(crate) fn format_line<'a>(elapsed_ms: u128, record: &'a Record<'a>) -> FormattedLine<'a> {
+    FormattedLine { elapsed_ms, record }
+}
+
+/// A formatted line, written directly into the destination when displayed.
+/// Built by [`format_line`].
+pub(crate) struct FormattedLine<'a> {
+    elapsed_ms: u128,
+    record: &'a Record<'a>,
+}
+
+impl Display for FormattedLine<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let record = self.record;
+        write!(
+            f,
+            "[{:>9} | {:>5} | {} | {}:{} ] {}",
+            self.elapsed_ms,
+            record.level(),
+            record.target(),
+            record.file().unwrap_or("unknown"),
+            record.line().unwrap_or(0),
+            record.args(),
+        )
+    }
 }
 
 #[cfg(test)]
@@ -92,7 +109,7 @@ mod tests {
             .build();
 
         assert_eq!(
-            format_line(120, &record),
+            format_line(120, &record).to_string(),
             "[      120 | ERROR | my_crate | src/lib.rs:42 ] something went wrong"
         );
     }
@@ -108,7 +125,7 @@ mod tests {
             .build();
 
         assert_eq!(
-            format_line(987654, &record),
+            format_line(987654, &record).to_string(),
             "[   987654 |  WARN | my_crate | src/lib.rs:7 ] still going"
         );
     }
@@ -122,7 +139,7 @@ mod tests {
             .build();
 
         assert_eq!(
-            format_line(0, &record),
+            format_line(0, &record).to_string(),
             "[        0 |  INFO | my_crate | unknown:0 ] no location"
         );
     }
@@ -138,7 +155,7 @@ mod tests {
             .build();
 
         assert_eq!(
-            format_line(1_234_567_890, &record),
+            format_line(1_234_567_890, &record).to_string(),
             "[1234567890 | DEBUG | my_crate | unknown:0 ] late"
         );
     }
