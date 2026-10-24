@@ -1,7 +1,8 @@
 # Contributing
 
 Thanks for taking the time to contribute to `lithium`. Bug reports, feature
-requests and pull requests are all welcome.
+requests and pull requests are all welcome. Everyone taking part is expected
+to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Reporting issues
 
