@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/Cerclique/lithium/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/Cerclique/lithium/actions/workflows/rust.yml)
 [![MSRV](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FCerclique%2Flithium%2Fmain%2FCargo.toml&query=%24.package.rust-version&label=MSRV)](https://github.com/Cerclique/lithium/blob/main/Cargo.toml)
+[![Docs](https://img.shields.io/badge/docs-latest%20release-blue)](https://cerclique.github.io/lithium/)
 [![License](https://img.shields.io/github/license/Cerclique/lithium)](https://github.com/Cerclique/lithium/blob/main/LICENSE)
 
 A logger wrapper with elapsed time tracking and colorized output built on [env_logger], [log], and [thiserror].
