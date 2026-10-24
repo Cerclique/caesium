@@ -1,3 +1,6 @@
+//! Initializes the logger, logs at every level, then shows the error from a
+//! second initialization.
+
 use lithium::{LevelFilter, LoggerBuilder, debug, error, info, trace, warn};
 
 fn main() {

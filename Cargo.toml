@@ -17,3 +17,10 @@ thiserror = "2.0.19"
 [[example]]
 name = "main"
 path = "examples/main.rs"
+
+[lints.rust]
+missing_docs = "warn"
+unsafe_code = "forbid"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }

@@ -1,8 +1,8 @@
 # Lithium
 
 [![CI](https://github.com/Cerclique/lithium/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/Cerclique/lithium/actions/workflows/rust.yml)
-[![MSRV](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FCerclique%2Flithium%2Fmain%2FCargo.toml&query=%24.package.rust-version&label=MSRV)](./Cargo.toml)
-[![License](https://img.shields.io/github/license/Cerclique/lithium)](./LICENSE)
+[![MSRV](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FCerclique%2Flithium%2Fmain%2FCargo.toml&query=%24.package.rust-version&label=MSRV)](https://github.com/Cerclique/lithium/blob/main/Cargo.toml)
+[![License](https://img.shields.io/github/license/Cerclique/lithium)](https://github.com/Cerclique/lithium/blob/main/LICENSE)
 
 A logger wrapper with elapsed time tracking and colorized output built on [env_logger], [log], and [thiserror].
 
@@ -24,7 +24,7 @@ lithium = { git = "https://github.com/Cerclique/lithium", tag = "v0.2.1" }
 ```
 
 The minimum supported Rust version is the `rust-version` in
-[`Cargo.toml`](./Cargo.toml), shown in the MSRV badge above.
+[`Cargo.toml`](https://github.com/Cerclique/lithium/blob/main/Cargo.toml), shown in the MSRV badge above.
 
 ## Usage
 
@@ -64,7 +64,7 @@ failed to initialize logger: attempted to set a logger after the logging system 
 
 ## Example
 
-[`examples/main.rs`](./examples/main.rs) initializes the logger, logs at every
+[`examples/main.rs`](https://github.com/Cerclique/lithium/blob/main/examples/main.rs) initializes the logger, logs at every
 level and then tries to initialize it a second time:
 
 ```sh
@@ -124,7 +124,7 @@ Every line is written to stdout in a fixed shape:
 
 ## Changelog
 
-See [CHANGELOG.md](./CHANGELOG.md).
+See [CHANGELOG.md](https://github.com/Cerclique/lithium/blob/main/CHANGELOG.md).
 
 ## Contributing
 
@@ -133,7 +133,7 @@ To report a vulnerability, see [SECURITY.md](https://github.com/Cerclique/lithiu
 
 ## License
 
-[MIT](./LICENSE)
+[MIT](https://github.com/Cerclique/lithium/blob/main/LICENSE)
 
 [env_logger]: https://docs.rs/env_logger
 [log]: https://docs.rs/log
