@@ -1,0 +1,5 @@
+# Default style; this only pins the edition that `cargo fmt` reads from
+# Cargo.toml, so a bare `rustfmt` (editors, scripts) formats the same way, and
+# keeps personal ~/.config/rustfmt settings out of the project.
+edition = "2024"
+style_edition = "2024"
