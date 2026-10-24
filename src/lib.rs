@@ -61,8 +61,7 @@ pub enum LoggerError {
 #[must_use = "call .init() to enable logging"]
 pub struct LoggerBuilder {
     level: LevelFilter,
-    color: bool,
-    source_location: bool,
+    format: format::LineFormat,
 }
 
 impl Default for LoggerBuilder {
@@ -77,8 +76,7 @@ impl LoggerBuilder {
     pub fn new() -> Self {
         Self {
             level: LevelFilter::Info,
-            color: false,
-            source_location: true,
+            format: format::LineFormat::default(),
         }
     }
 
@@ -90,14 +88,14 @@ impl LoggerBuilder {
 
     /// Enables or disables colorized output. Returns `self` for chaining.
     pub fn color(mut self, color: bool) -> Self {
-        self.color = color;
+        self.format.color = color;
         self
     }
 
     /// Shows or hides the source location (`file:line`) on each line. Shown
     /// by default. Returns `self` for chaining.
     pub fn source_location(mut self, source_location: bool) -> Self {
-        self.source_location = source_location;
+        self.format.source_location = source_location;
         self
     }
 
@@ -125,7 +123,7 @@ impl LoggerBuilder {
     ///
     /// [`init`]: LoggerBuilder::init
     fn env_builder(&self) -> env_logger::Builder {
-        let formatter = format::LineFormatter::new(self.color, self.source_location);
+        let formatter = format::LineFormatter::new(self.format);
 
         let mut builder = env_logger::Builder::new();
         builder.target(env_logger::Target::Stdout);

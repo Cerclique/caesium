@@ -16,9 +16,8 @@ process, whoever attempts it.
 _Avoid_: Install, setup, registration
 
 **Logger builder**:
-The configuration of the global logger (minimum level, color and whether
-lines show source location) before initialization. It is not itself a logger
-and never handles a record.
+The configuration of the global logger (minimum level and line format)
+before initialization. It is not itself a logger and never handles a record.
 _Avoid_: Logger, config
 
 **Line**:
@@ -27,6 +26,12 @@ location and message, in a fixed shape. Source location is shown by default; it
 is left out when turned off or when the record has none, and nothing else in
 the shape changes.
 _Avoid_: Entry, log entry, output
+
+**Line format**:
+How every line is written: whether it shows source location, and whether it
+is colored. It decides how a record is written, never whether it is; that is
+the minimum level's job.
+_Avoid_: Line shape, line options, line style
 
 **Source location**:
 The file and line in the code that emitted a log record. It is there for a

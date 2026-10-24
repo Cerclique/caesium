@@ -1,11 +1,11 @@
 //! Formatting of log records into formatted lines.
 //!
-//! [`format_line`] is the pure core: given the elapsed time, a
-//! [`log::Record`] and whether to show source location, it returns a [`Display`] value that renders the exact
-//! formatted line `lithium` writes for that record, without allocating.
-//! [`LineFormatter`] is a thin adapter that binds the origin instant and the
-//! color and source location flags, and hands each formatted line to the
-//! `env_logger` formatter buffer.
+//! [`LineFormat`] is the pure core: it holds how every line is written, and
+//! [`LineFormat::line`] turns the elapsed time and a [`log::Record`] into a
+//! [`Display`] value that renders the exact formatted line `lithium` writes for
+//! that record, without allocating. [`LineFormatter`] is a thin adapter that
+//! binds the origin instant and a line format, and hands each formatted line to
+//! the `env_logger` formatter buffer.
 //!
 //! A formatted line has a fixed shape:
 //!
@@ -25,7 +25,43 @@ use std::time::{Duration, Instant};
 
 use log::Record;
 
-/// Binds the origin instant and the color flag for a running logger, and
+/// How every line is written: whether it is colored and whether it shows
+/// source location.
+///
+/// The default is uncolored with source location shown.
+#[derive(Clone, Copy)]
+pub(crate) struct LineFormat {
+    pub(crate) color: bool,
+    pub(crate) source_location: bool,
+}
+
+impl Default for LineFormat {
+    fn default() -> Self {
+        Self {
+            color: false,
+            source_location: true,
+        }
+    }
+}
+
+impl LineFormat {
+    /// Renders one log record as a formatted line, without color.
+    ///
+    /// The elapsed time is shown as zero-padded `HH:MM:SS.sss` truncated to the
+    /// millisecond. Hours are at least two digits and keep growing past 99. The
+    /// level is right-aligned in a 5-column field. When source location is on
+    /// and the record has a file, the line shows `file:line`, or just `file`
+    /// when the record has no line; otherwise the segment is left out.
+    pub(crate) fn line<'a>(self, elapsed: Duration, record: &'a Record<'a>) -> FormattedLine<'a> {
+        FormattedLine {
+            format: self,
+            elapsed,
+            record,
+        }
+    }
+}
+
+/// Binds the origin instant and the line format for a running logger, and
 /// writes formatted lines into the `env_logger` formatter buffer.
 ///
 /// The origin instant is captured in [`new`], which [`LoggerBuilder::init`] calls,
@@ -34,16 +70,14 @@ use log::Record;
 /// [`LoggerBuilder::init`]: crate::LoggerBuilder::init
 pub(crate) struct LineFormatter {
     start: Instant,
-    color: bool,
-    source_location: bool,
+    format: LineFormat,
 }
 
 impl LineFormatter {
-    pub(crate) fn new(color: bool, source_location: bool) -> Self {
+    pub(crate) fn new(format: LineFormat) -> Self {
         Self {
             start: Instant::now(),
-            color,
-            source_location,
+            format,
         }
     }
 
@@ -54,9 +88,9 @@ impl LineFormatter {
         buf: &mut env_logger::fmt::Formatter,
         record: &Record<'_>,
     ) -> std::io::Result<()> {
-        let line = format_line(self.start.elapsed(), record, self.source_location);
+        let line = self.format.line(self.start.elapsed(), record);
 
-        if self.color {
+        if self.format.color {
             let style = buf.default_level_style(record.level());
             writeln!(buf, "{style}{line}{style:#}")
         } else {
@@ -65,32 +99,12 @@ impl LineFormatter {
     }
 }
 
-/// Renders one log record as a formatted line.
-///
-/// The elapsed time is the time since [`LineFormatter::new`] ran, as
-/// zero-padded `HH:MM:SS.sss` truncated to the millisecond. Hours are at least
-/// two digits and keep growing past 99. The level is right-aligned in a
-/// 5-column field. When `source_location` is set and the record has a file,
-/// the line shows `file:line`, or just `file` when the record has no line;
-/// otherwise the segment is left out.
-pub(crate) fn format_line<'a>(
-    elapsed: Duration,
-    record: &'a Record<'a>,
-    source_location: bool,
-) -> FormattedLine<'a> {
-    FormattedLine {
-        elapsed,
-        record,
-        source_location,
-    }
-}
-
 /// A formatted line, written directly into the destination when displayed.
-/// Built by [`format_line`].
+/// Built by [`LineFormat::line`].
 pub(crate) struct FormattedLine<'a> {
+    format: LineFormat,
     elapsed: Duration,
     record: &'a Record<'a>,
-    source_location: bool,
 }
 
 impl Display for FormattedLine<'_> {
@@ -107,7 +121,7 @@ impl Display for FormattedLine<'_> {
             record.level(),
             record.target(),
         )?;
-        if self.source_location {
+        if self.format.source_location {
             match (record.file(), record.line()) {
                 (Some(file), Some(line)) => write!(f, " | {file}:{line}")?,
                 (Some(file), None) => write!(f, " | {file}")?,
@@ -124,7 +138,7 @@ mod tests {
     use log::Level;
 
     #[test]
-    fn test_format_line_full_location() {
+    fn test_line_full_location() {
         let record = Record::builder()
             .level(Level::Error)
             .target("my_crate")
@@ -134,13 +148,15 @@ mod tests {
             .build();
 
         assert_eq!(
-            format_line(Duration::from_millis(120), &record, true).to_string(),
+            LineFormat::default()
+                .line(Duration::from_millis(120), &record)
+                .to_string(),
             "[00:00:00.120 | ERROR | my_crate | src/lib.rs:42 ] something went wrong"
         );
     }
 
     #[test]
-    fn test_format_line_splits_elapsed_time() {
+    fn test_line_splits_elapsed_time() {
         let record = Record::builder()
             .level(Level::Warn)
             .target("my_crate")
@@ -151,13 +167,15 @@ mod tests {
 
         // 3h 25m 45s 678ms
         assert_eq!(
-            format_line(Duration::from_millis(12_345_678), &record, true).to_string(),
+            LineFormat::default()
+                .line(Duration::from_millis(12_345_678), &record)
+                .to_string(),
             "[03:25:45.678 |  WARN | my_crate | src/lib.rs:7 ] still going"
         );
     }
 
     #[test]
-    fn test_format_line_truncates_to_the_millisecond() {
+    fn test_line_truncates_to_the_millisecond() {
         let record = Record::builder()
             .level(Level::Info)
             .target("my_crate")
@@ -165,13 +183,15 @@ mod tests {
             .build();
 
         assert_eq!(
-            format_line(Duration::from_micros(1_999), &record, true).to_string(),
+            LineFormat::default()
+                .line(Duration::from_micros(1_999), &record)
+                .to_string(),
             "[00:00:00.001 |  INFO | my_crate ] almost"
         );
     }
 
     #[test]
-    fn test_format_line_without_location() {
+    fn test_line_without_location() {
         let record = Record::builder()
             .level(Level::Info)
             .target("my_crate")
@@ -179,13 +199,15 @@ mod tests {
             .build();
 
         assert_eq!(
-            format_line(Duration::ZERO, &record, true).to_string(),
+            LineFormat::default()
+                .line(Duration::ZERO, &record)
+                .to_string(),
             "[00:00:00.000 |  INFO | my_crate ] no location"
         );
     }
 
     #[test]
-    fn test_format_line_file_without_line() {
+    fn test_line_file_without_line() {
         let record = Record::builder()
             .level(Level::Info)
             .target("my_crate")
@@ -194,13 +216,15 @@ mod tests {
             .build();
 
         assert_eq!(
-            format_line(Duration::ZERO, &record, true).to_string(),
+            LineFormat::default()
+                .line(Duration::ZERO, &record)
+                .to_string(),
             "[00:00:00.000 |  INFO | my_crate | src/lib.rs ] no line"
         );
     }
 
     #[test]
-    fn test_format_line_source_location_off() {
+    fn test_line_source_location_off() {
         let record = Record::builder()
             .level(Level::Error)
             .target("my_crate")
@@ -210,13 +234,18 @@ mod tests {
             .build();
 
         assert_eq!(
-            format_line(Duration::from_millis(120), &record, false).to_string(),
+            LineFormat {
+                source_location: false,
+                ..LineFormat::default()
+            }
+            .line(Duration::from_millis(120), &record)
+            .to_string(),
             "[00:00:00.120 | ERROR | my_crate ] something went wrong"
         );
     }
 
     #[test]
-    fn test_format_line_hours_past_99() {
+    fn test_line_hours_past_99() {
         // Hours are a minimum of two digits: past 99 they keep growing
         // instead of wrapping.
         let record = Record::builder()
@@ -226,7 +255,9 @@ mod tests {
             .build();
 
         assert_eq!(
-            format_line(Duration::from_secs(100 * 3600), &record, true).to_string(),
+            LineFormat::default()
+                .line(Duration::from_secs(100 * 3600), &record)
+                .to_string(),
             "[100:00:00.000 | DEBUG | my_crate ] late"
         );
     }
