@@ -102,9 +102,8 @@ Set the minimum level via `LoggerBuilder::level(LevelFilter::Level)`. Messages a
 
 ## Format
 
-### stdout
-
-Every line is written to stdout in a fixed shape:
+Every line is written to stderr, never stdout, so your program's stdout stays
+free for its own output. Each line has a fixed shape:
 
 ```text
 [00:02:05.120 | ERROR | my_crate | src/lib.rs:42 ] something went wrong
@@ -133,8 +132,8 @@ written.
 - `LoggerBuilder::new` reads no environment variables, so
   `RUST_LOG` has no effect. The minimum level is set only via `level`.
 - `color(true)` does not force color. It resolves through
-  `env_logger`'s terminal detection, so styling is stripped when the output is
-  not a TTY (for example, when piped or redirected). It means "allow color
+  `env_logger`'s terminal detection, so styling is stripped when stderr is
+  not a TTY (for example, when redirected to a file). It means "allow color
   when the terminal supports it".
 
 ## Changelog
