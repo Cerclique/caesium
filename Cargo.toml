@@ -7,6 +7,7 @@ description = "A colorized logger that prefixes each line with the time elapsed 
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/Cerclique/caesium"
+documentation = "https://docs.rs/caesium-log"
 keywords = ["logging", "logger", "elapsed", "color", "env_logger"]
 categories = ["development-tools::debugging"]
 include = ["src/**", "examples/**", "README.md", "CHANGELOG.md", "LICENSE"]
