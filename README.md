@@ -144,10 +144,6 @@ See [CHANGELOG.md](https://github.com/Cerclique/caesium/blob/main/CHANGELOG.md).
 ## Contributing
 
 See [CONTRIBUTING.md](https://github.com/Cerclique/caesium/blob/main/docs/CONTRIBUTING.md).
-To start with every tool preinstalled, open the dev container in GitHub Codespaces:
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Cerclique/caesium)
-
 To report a vulnerability, see [SECURITY.md](https://github.com/Cerclique/caesium/blob/main/docs/SECURITY.md).
 This project follows a [Code of Conduct](https://github.com/Cerclique/caesium/blob/main/docs/CODE_OF_CONDUCT.md).
 

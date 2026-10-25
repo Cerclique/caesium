@@ -16,23 +16,6 @@ You need a stable Rust toolchain. The minimum supported Rust version (MSRV) is
 the `rust-version` in [`Cargo.toml`](../Cargo.toml); don't use language or library
 features newer than it.
 
-### Dev container
-
-The repository has a [dev container](../.devcontainer/devcontainer.json) with
-everything below preinstalled: the stable toolchain, rust-analyzer, prek,
-cargo-deny, cargo-semver-checks and git-cliff, with the Git hooks enabled.
-
-- **GitHub Codespaces**: [open caesium in a codespace](https://codespaces.new/Cerclique/caesium),
-  nothing to install.
-- **VS Code**: with Docker and the Dev Containers extension, run
-  *Dev Containers: Reopen in Container*.
-
-The tool versions are pinned in
-[`.devcontainer/post-create.sh`](../.devcontainer/post-create.sh).
-
-Working on your own machine instead? Install the tools you need as described
-below.
-
 ### Git hooks
 
 The repository ships Git hooks in [`.pre-commit-config.yaml`](../.pre-commit-config.yaml),
@@ -80,7 +63,6 @@ The workflows live in [`.github/workflows/`](../.github/workflows/):
 | --- | --- | --- |
 | `rust.yml` | PRs to `main`, pushes to `main` | The checks above as separate jobs: `fmt`, `clippy`, `test` (Linux, macOS, Windows), `docs`, `msrv`, `deny`, `semver` |
 | `pr-title.yml` | PRs | `conventional`: the PR title is a conventional commit |
-| `devcontainer.yml` | PRs touching `.devcontainer/`, weekly, manual | Builds the dev container and runs the checks inside it |
 | `scheduled.yml` | Weekly, manual | New advisories against the locked dependencies, tests and clippy on beta and nightly |
 | `release.yml` | `v*` tag push | `publish`: publishes the crate to crates.io; then `release`: creates the GitHub Release with git-cliff notes |
 
@@ -88,11 +70,10 @@ Every `rust.yml` job except `semver`, plus `conventional`, is required to
 merge, and the branch must be up to date with `main`: if GitHub says it is
 behind, update it and let the checks run again.
 
-Each job is cancelled after 15 minutes of running (30 for the dev container
-build), far above their usual time of under a minute. The limit doesn't cover
-time spent queued: if jobs stay pending at 0s with no runner, force-cancel the
-run and start a new one (push a commit, or update the branch) rather than
-re-running it.
+Each job is cancelled after 15 minutes of running, far above their usual time
+of under a minute. The limit doesn't cover time spent queued: if jobs stay
+pending at 0s with no runner, force-cancel the run and start a new one (push a
+commit, or update the branch) rather than re-running it.
 
 ### Domain language and decisions
 
