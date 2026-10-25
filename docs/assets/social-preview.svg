@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+<!-- GitHub social preview (Settings > General > Social preview). Uses JetBrains Mono; render with: rsvg-convert -w 1280 -h 640 social-preview.svg -o social-preview.png -->
+<rect width="1280" height="640" fill="#0d1117"/>
+<text x="80" y="110" font-family="JetBrains Mono" font-size="40" font-weight="800" fill="#e6edf3">caesium-log</text>
+<text x="80" y="152" font-family="JetBrains Mono" font-size="24" fill="#8b949e">Colorized Rust logger with elapsed time</text>
+<text x="76" y="330" font-family="JetBrains Mono" font-size="148" font-weight="800" fill="#e6edf3">00:00:02<tspan fill="#8b949e">.901</tspan></text>
+<text x="80" y="450" font-family="JetBrains Mono" font-size="21" font-weight="400" fill="#79c0ff" opacity="1.0" xml:space="preserve">[00:00:00.217 | DEBUG | app::db | src/db.rs:31 ] pool ready (8 conns)</text>
+<text x="80" y="500" font-family="JetBrains Mono" font-size="21" font-weight="400" fill="#e3b341" opacity="1.0" xml:space="preserve">[00:00:01.348 |  WARN | app::db | src/db.rs:58 ] slow query (212 ms)</text>
+<text x="80" y="550" font-family="JetBrains Mono" font-size="21" font-weight="700" fill="#ff7b72" opacity="1.0" xml:space="preserve">[00:00:02.901 | ERROR | app::net | src/net.rs:17 ] upstream timed out</text>
+</svg>
