@@ -10,7 +10,7 @@ Please do **not** report security vulnerabilities through public issues, pull
 requests or discussions.
 
 Report them privately through GitHub instead:
-[**Report a vulnerability**](https://github.com/Cerclique/lithium/security/advisories/new)
+[**Report a vulnerability**](https://github.com/Cerclique/caesium/security/advisories/new)
 (Security tab → Advisories → Report a vulnerability).
 
 Please include:

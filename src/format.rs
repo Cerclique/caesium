@@ -2,7 +2,7 @@
 //!
 //! [`LineFormat`] is the pure core: it holds how every line is written, and
 //! [`LineFormat::line`] turns the elapsed time and a [`log::Record`] into a
-//! [`Display`] value that renders the exact formatted line `lithium` writes for
+//! [`Display`] value that renders the exact formatted line `caesium` writes for
 //! that record, without allocating. [`LineFormatter`] is a thin adapter that
 //! binds a clock and a line format, and hands each formatted line to the
 //! `env_logger` formatter buffer.

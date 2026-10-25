@@ -39,7 +39,7 @@ pub enum LoggerError {
 /// # Example
 ///
 /// ```rust
-/// use lithium::{info, LoggerBuilder, LevelFilter};
+/// use caesium::{info, LoggerBuilder, LevelFilter};
 ///
 /// LoggerBuilder::new()
 ///     .level(LevelFilter::Debug)
@@ -140,10 +140,10 @@ impl LoggerBuilder {
 
 /// Re-exports the `log` crate macros and `LevelFilter` for convenience.
 ///
-/// These macros and types can be used directly after importing from the `lithium` crate:
+/// These macros and types can be used directly after importing from the `caesium` crate:
 ///
 /// ```rust
-/// use lithium::{info, debug, warn, error, trace, LevelFilter};
+/// use caesium::{info, debug, warn, error, trace, LevelFilter};
 ///
 /// info!("This is an info message");
 /// ```
@@ -320,7 +320,7 @@ mod tests {
 
     /// Set in the child process started by
     /// `test_init_writes_lines_to_stderr_not_stdout`.
-    const STDERR_CHILD: &str = "LITHIUM_STDERR_CHILD";
+    const STDERR_CHILD: &str = "CAESIUM_STDERR_CHILD";
 
     /// Runs only inside the child process: initializes the real global logger
     /// and logs one record. Does nothing in a normal test run.
@@ -346,7 +346,7 @@ mod tests {
 
         // libtest writes its own report to stdout, so check for the line
         // itself rather than an empty stdout.
-        let line = "|  INFO | lithium::tests ] to stderr";
+        let line = "|  INFO | caesium::tests ] to stderr";
         let stdout = String::from_utf8(output.stdout).unwrap();
         let stderr = String::from_utf8(output.stderr).unwrap();
         assert!(

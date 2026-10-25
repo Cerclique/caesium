@@ -1,9 +1,10 @@
-# Lithium
+# Caesium
 
-[![CI](https://github.com/Cerclique/lithium/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/Cerclique/lithium/actions/workflows/rust.yml)
-[![MSRV](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FCerclique%2Flithium%2Fmain%2FCargo.toml&query=%24.package.rust-version&label=MSRV)](https://github.com/Cerclique/lithium/blob/main/Cargo.toml)
-[![Docs](https://img.shields.io/badge/docs-latest%20release-blue)](https://cerclique.github.io/lithium/)
-[![License](https://img.shields.io/github/license/Cerclique/lithium)](https://github.com/Cerclique/lithium/blob/main/LICENSE)
+[![CI](https://github.com/Cerclique/caesium/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/Cerclique/caesium/actions/workflows/rust.yml)
+[![MSRV](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2FCerclique%2Fcaesium%2Fmain%2FCargo.toml&query=%24.package.rust-version&label=MSRV)](https://github.com/Cerclique/caesium/blob/main/Cargo.toml)
+[![Crates.io](https://img.shields.io/crates/v/caesium-log)](https://crates.io/crates/caesium-log)
+[![Docs](https://img.shields.io/docsrs/caesium-log)](https://docs.rs/caesium-log)
+[![License](https://img.shields.io/github/license/Cerclique/caesium)](https://github.com/Cerclique/caesium/blob/main/LICENSE)
 
 A logger wrapper with elapsed time tracking and colorized output built on [env_logger], [log], and [thiserror].
 
@@ -17,16 +18,16 @@ A logger wrapper with elapsed time tracking and colorized output built on [env_l
 
 ## Installation
 
-`lithium` is not published on crates.io (the `lithium` crate there is an
-unrelated project), so depend on it from Git, pinned to a release tag:
-
-```toml
-[dependencies]
-lithium = { git = "https://github.com/Cerclique/lithium", tag = "v0.4.0" }
+```sh
+cargo add caesium-log
 ```
 
+The package is `caesium-log` on crates.io, and the library is imported as
+`caesium`. Up to 0.4.0 the crate was called `lithium` and was only available
+from Git.
+
 The minimum supported Rust version is the `rust-version` in
-[`Cargo.toml`](https://github.com/Cerclique/lithium/blob/main/Cargo.toml), shown in the MSRV badge above.
+[`Cargo.toml`](https://github.com/Cerclique/caesium/blob/main/Cargo.toml), shown in the MSRV badge above.
 
 ## Usage
 
@@ -34,7 +35,7 @@ Configure a `LoggerBuilder`, then call `init` once to initialize it as
 the global logger:
 
 ```rust
-use lithium::{LevelFilter, LoggerBuilder, debug, info};
+use caesium::{LevelFilter, LoggerBuilder, debug, info};
 
 fn main() {
     LoggerBuilder::new()
@@ -47,7 +48,7 @@ fn main() {
 }
 ```
 
-`lithium` re-exports the `log` macros (`trace!`, `debug!`, `info!`, `warn!`,
+`caesium` re-exports the `log` macros (`trace!`, `debug!`, `info!`, `warn!`,
 `error!`) and `LevelFilter`, so you don't need a direct `log` dependency.
 Records logged through `log` by your dependencies go through the same logger.
 
@@ -67,7 +68,7 @@ failed to initialize logger: attempted to set a logger after the logging system 
 
 ## Example
 
-[`examples/main.rs`](https://github.com/Cerclique/lithium/blob/main/examples/main.rs) initializes the logger, logs at every
+[`examples/main.rs`](https://github.com/Cerclique/caesium/blob/main/examples/main.rs) initializes the logger, logs at every
 level and then tries to initialize it a second time:
 
 ```sh
@@ -138,21 +139,21 @@ written.
 
 ## Changelog
 
-See [CHANGELOG.md](https://github.com/Cerclique/lithium/blob/main/CHANGELOG.md).
+See [CHANGELOG.md](https://github.com/Cerclique/caesium/blob/main/CHANGELOG.md).
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/Cerclique/lithium/blob/main/docs/CONTRIBUTING.md).
+See [CONTRIBUTING.md](https://github.com/Cerclique/caesium/blob/main/docs/CONTRIBUTING.md).
 To start with every tool preinstalled, open the dev container in GitHub Codespaces:
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Cerclique/lithium)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Cerclique/caesium)
 
-To report a vulnerability, see [SECURITY.md](https://github.com/Cerclique/lithium/blob/main/docs/SECURITY.md).
-This project follows a [Code of Conduct](https://github.com/Cerclique/lithium/blob/main/docs/CODE_OF_CONDUCT.md).
+To report a vulnerability, see [SECURITY.md](https://github.com/Cerclique/caesium/blob/main/docs/SECURITY.md).
+This project follows a [Code of Conduct](https://github.com/Cerclique/caesium/blob/main/docs/CODE_OF_CONDUCT.md).
 
 ## License
 
-[MIT](https://github.com/Cerclique/lithium/blob/main/LICENSE)
+[MIT](https://github.com/Cerclique/caesium/blob/main/LICENSE)
 
 [env_logger]: https://docs.rs/env_logger
 [log]: https://docs.rs/log
