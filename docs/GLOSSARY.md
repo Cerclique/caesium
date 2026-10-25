@@ -21,8 +21,8 @@ before initialization. It is not itself a logger and never handles a record.
 _Avoid_: Logger, config
 
 **Line**:
-The text written for one log record: elapsed time, level, target, source
-location and message, in a fixed shape. Source location is shown by default; it
+The text written to standard error for one log record: elapsed time, level,
+target, source location and message, in a fixed shape. Source location is shown by default; it
 is left out when turned off or when the record has none, and nothing else in
 the shape changes.
 _Avoid_: Entry, log entry, output
@@ -49,6 +49,6 @@ The least severe level the global logger writes; records below it are dropped.
 _Avoid_: Level filter, log level, verbosity
 
 **Color**:
-Styling a whole line with its level's color, applied only when the destination
+Styling a whole line with its level's color, applied only when standard error
 supports it.
 _Avoid_: Colour, colorized output, styling

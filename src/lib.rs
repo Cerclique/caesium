@@ -33,7 +33,7 @@ pub enum LoggerError {
 ///
 /// `LoggerBuilder` uses a fluent builder pattern. Construct it via [`new`],
 /// configure it with [`level`], [`color`] and [`source_location`], then
-/// initialize it with [`init`]. Each line is written to stdout as described in
+/// initialize it with [`init`]. Each line is written to stderr as described in
 /// [Format](crate#format).
 ///
 /// # Example
@@ -112,7 +112,7 @@ impl LoggerBuilder {
     }
 
     /// Returns the `env_logger` builder that [`init`] initializes globally,
-    /// configured to write to stdout with the level filter and the line
+    /// configured to write to stderr with the level filter and the line
     /// formatter. `elapsed` returns the elapsed time shown on each line.
     ///
     /// Kept separate from [`init`] so tests can redirect it to a pipe, fix the
@@ -127,7 +127,7 @@ impl LoggerBuilder {
         let formatter = format::LineFormatter::new(self.format, elapsed);
 
         let mut builder = env_logger::Builder::new();
-        builder.target(env_logger::Target::Stdout);
+        builder.target(env_logger::Target::Stderr);
         builder.filter_level(self.level);
         builder.format(move |buf, record| formatter.format(buf, record));
         builder
@@ -316,6 +316,44 @@ mod tests {
             !output.contains('\x1b'),
             "unexpected ANSI styling in {output:?}"
         );
+    }
+
+    /// Set in the child process started by
+    /// `test_init_writes_lines_to_stderr_not_stdout`.
+    const STDERR_CHILD: &str = "LITHIUM_STDERR_CHILD";
+
+    /// Runs only inside the child process: initializes the real global logger
+    /// and logs one record. Does nothing in a normal test run.
+    #[test]
+    fn stderr_child() {
+        if std::env::var_os(STDERR_CHILD).is_none() {
+            return;
+        }
+        LoggerBuilder::new().source_location(false).init().unwrap();
+        info!("to stderr");
+    }
+
+    #[test]
+    fn test_init_writes_lines_to_stderr_not_stdout() {
+        // Rerun this test binary with only `stderr_child`, so `init` sets up
+        // the global logger of a fresh process whose streams we can read.
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args(["tests::stderr_child", "--exact", "--nocapture"])
+            .env(STDERR_CHILD, "1")
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "child failed: {output:?}");
+
+        // libtest writes its own report to stdout, so check for the line
+        // itself rather than an empty stdout.
+        let line = "|  INFO | lithium::tests ] to stderr";
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        assert!(
+            stderr.contains(line),
+            "line missing from stderr: {stderr:?}"
+        );
+        assert!(!stdout.contains(line), "line written to stdout: {stdout:?}");
     }
 
     #[test]
