@@ -68,6 +68,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
+name = "caesium-log"
+version = "0.4.0"
+dependencies = [
+ "env_logger",
+ "log",
+ "thiserror",
+]
+
+[[package]]
 name = "colorchoice"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -167,15 +176,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
-]
-
-[[package]]
-name = "lithium"
-version = "0.4.0"
-dependencies = [
- "env_logger",
- "log",
- "thiserror",
 ]
 
 [[package]]

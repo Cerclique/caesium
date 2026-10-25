@@ -1,4 +1,4 @@
-# Lithium
+# Caesium
 
 A logger that prefixes every log record with the time elapsed since
 initialization, plus its level, target and source location, with optional color.
