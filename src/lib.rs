@@ -29,8 +29,34 @@ pub enum LoggerError {
 // Builder
 // ---------------------------------------------------------------------------
 
-/// Configures and initializes the global logger, which writes elapsed time and
-/// optional colorized output on top of [`env_logger`].
+/// When lines are styled with their level's color. Passed to
+/// [`LoggerBuilder::color`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum ColorChoice {
+    /// Never styles lines, even when stderr is a terminal.
+    Never,
+    /// Styles lines only when stderr supports it: it is a terminal, or
+    /// `CLICOLOR_FORCE` is set, and `NO_COLOR` is not. The default.
+    #[default]
+    Auto,
+    /// Always styles lines, even when stderr is redirected to a file or a
+    /// pipe.
+    Always,
+}
+
+impl From<ColorChoice> for env_logger::WriteStyle {
+    fn from(choice: ColorChoice) -> Self {
+        match choice {
+            ColorChoice::Never => Self::Never,
+            ColorChoice::Auto => Self::Auto,
+            ColorChoice::Always => Self::Always,
+        }
+    }
+}
+
+/// Configures and initializes the global logger, which writes elapsed time,
+/// styled with each level's color when stderr supports it, on top of
+/// [`env_logger`].
 ///
 /// `LoggerBuilder` uses a fluent builder pattern. Construct it via [`new`],
 /// configure it with [`level`], [`color`] and [`source_location`], then
@@ -71,7 +97,7 @@ impl Default for LoggerBuilder {
 
 impl LoggerBuilder {
     /// Creates a builder with the default level of [`LevelFilter::Info`],
-    /// color disabled and source location shown.
+    /// color set to [`ColorChoice::Auto`] and source location shown.
     pub fn new() -> Self {
         Self {
             level: LevelFilter::Info,
@@ -85,9 +111,10 @@ impl LoggerBuilder {
         self
     }
 
-    /// Enables or disables colorized output. Returns `self` for chaining.
-    pub fn color(mut self, color: bool) -> Self {
-        self.format.color = color;
+    /// Sets when lines are styled with their level's color. Defaults to
+    /// [`ColorChoice::Auto`]. Returns `self` for chaining.
+    pub fn color(mut self, choice: ColorChoice) -> Self {
+        self.format.color = choice;
         self
     }
 
@@ -133,6 +160,7 @@ impl LoggerBuilder {
         let mut builder = env_logger::Builder::new();
         builder.target(env_logger::Target::Stderr);
         builder.filter_level(self.level);
+        builder.write_style(self.format.color.into());
         builder.format(move |buf, record| formatter.format(buf, record));
         builder
     }
@@ -142,15 +170,8 @@ impl LoggerBuilder {
 // Re-exports
 // ---------------------------------------------------------------------------
 
-/// Re-exports the `log` crate macros and `LevelFilter` for convenience.
-///
-/// These macros and types can be used directly after importing from the `caesium` crate:
-///
-/// ```rust
-/// use caesium::{info, debug, warn, error, trace, LevelFilter};
-///
-/// info!("This is an info message");
-/// ```
+// The crate docs (README "Usage") explain why these are re-exported; a doc
+// comment here would be prepended to `LevelFilter`'s own page.
 pub use log::LevelFilter;
 pub use log::{debug, error, info, trace, warn};
 
@@ -161,7 +182,7 @@ pub use log::{debug, error, info, trace, warn};
 #[cfg(test)]
 mod tests {
     use super::*;
-    use env_logger::{Target, WriteStyle};
+    use env_logger::Target;
     use log::{Level, Log, Record};
     use std::io::Write;
     use std::sync::{Arc, Mutex};
@@ -189,16 +210,11 @@ mod tests {
     /// Builds the same pipeline `init` initializes, but writing to a capture
     /// buffer instead of becoming the global logger, with every line showing
     /// `elapsed`.
-    fn piped(
-        builder: &LoggerBuilder,
-        write_style: WriteStyle,
-        elapsed: Duration,
-    ) -> (env_logger::Logger, Capture) {
+    fn piped(builder: &LoggerBuilder, elapsed: Duration) -> (env_logger::Logger, Capture) {
         let capture = Capture::default();
         let env_logger = builder
             .env_builder(move || elapsed)
             .target(Target::Pipe(Box::new(capture.clone())))
-            .write_style(write_style)
             .build();
         (env_logger, capture)
     }
@@ -221,7 +237,7 @@ mod tests {
 
     #[test]
     fn test_default_level_filters_below_info() {
-        let (log, capture) = piped(&LoggerBuilder::new(), WriteStyle::Never, Duration::ZERO);
+        let (log, capture) = piped(&LoggerBuilder::new(), Duration::ZERO);
 
         emit(&log, Level::Trace, "dropped");
         emit(&log, Level::Debug, "dropped");
@@ -240,7 +256,7 @@ mod tests {
     #[test]
     fn test_explicit_level_is_applied() {
         let builder = LoggerBuilder::new().level(LevelFilter::Warn);
-        let (log, capture) = piped(&builder, WriteStyle::Never, Duration::ZERO);
+        let (log, capture) = piped(&builder, Duration::ZERO);
 
         emit(&log, Level::Info, "dropped");
         emit(&log, Level::Warn, "kept");
@@ -254,7 +270,7 @@ mod tests {
     #[test]
     fn test_trace_level_emits_everything() {
         let builder = LoggerBuilder::new().level(LevelFilter::Trace);
-        let (log, capture) = piped(&builder, WriteStyle::Never, Duration::ZERO);
+        let (log, capture) = piped(&builder, Duration::ZERO);
 
         emit(&log, Level::Trace, "finest");
 
@@ -267,7 +283,7 @@ mod tests {
     #[test]
     fn test_source_location_off_omits_the_segment() {
         let builder = LoggerBuilder::new().source_location(false);
-        let (log, capture) = piped(&builder, WriteStyle::Never, Duration::ZERO);
+        let (log, capture) = piped(&builder, Duration::ZERO);
 
         emit(&log, Level::Info, "short");
 
@@ -279,11 +295,7 @@ mod tests {
 
     #[test]
     fn test_elapsed_time_comes_from_the_clock() {
-        let (log, capture) = piped(
-            &LoggerBuilder::new(),
-            WriteStyle::Never,
-            Duration::from_millis(125_120),
-        );
+        let (log, capture) = piped(&LoggerBuilder::new(), Duration::from_millis(125_120));
 
         emit(&log, Level::Info, "later");
 
@@ -294,9 +306,10 @@ mod tests {
     }
 
     #[test]
-    fn test_color_enabled_styles_the_line() {
-        let builder = LoggerBuilder::new().color(true);
-        let (log, capture) = piped(&builder, WriteStyle::Always, Duration::ZERO);
+    fn test_color_always_styles_a_line_that_is_not_going_to_a_terminal() {
+        // A pipe is never a terminal, so only a forced choice styles it.
+        let builder = LoggerBuilder::new().color(ColorChoice::Always);
+        let (log, capture) = piped(&builder, Duration::ZERO);
 
         emit(&log, Level::Error, "styled");
 
@@ -309,9 +322,8 @@ mod tests {
     }
 
     #[test]
-    fn test_color_disabled_writes_plain_text() {
-        // Even when the terminal allows styling, color(false) must not emit it.
-        let (log, capture) = piped(&LoggerBuilder::new(), WriteStyle::Always, Duration::ZERO);
+    fn test_color_auto_leaves_a_line_that_is_not_going_to_a_terminal_plain() {
+        let (log, capture) = piped(&LoggerBuilder::new(), Duration::ZERO);
 
         emit(&log, Level::Error, "plain");
 
@@ -326,38 +338,143 @@ mod tests {
     /// `test_init_writes_lines_to_stderr_not_stdout`.
     const STDERR_CHILD: &str = "CAESIUM_STDERR_CHILD";
 
-    /// Runs only inside the child process: initializes the real global logger
-    /// and logs one record. Does nothing in a normal test run.
+    /// Runs only inside the child process started by `run_child`: initializes
+    /// the real global logger with the color choice named by `STDERR_CHILD`
+    /// and logs one record. Does nothing if run by hand with `--ignored`.
     #[test]
+    #[ignore = "helper run by test_init_writes_lines_to_stderr_not_stdout and the color tests"]
     fn stderr_child() {
-        if std::env::var_os(STDERR_CHILD).is_none() {
+        let Some(color) = std::env::var_os(STDERR_CHILD) else {
             return;
-        }
-        LoggerBuilder::new().source_location(false).init().unwrap();
+        };
+        let builder = LoggerBuilder::new().source_location(false);
+        let builder = match color.to_str() {
+            Some("unset") => builder,
+            Some("never") => builder.color(ColorChoice::Never),
+            Some("auto") => builder.color(ColorChoice::Auto),
+            Some("always") => builder.color(ColorChoice::Always),
+            other => panic!("unknown color choice {other:?}"),
+        };
+        builder.init().unwrap();
         info!("to stderr");
+    }
+
+    /// The streams of a child process that initialized the real global logger
+    /// and logged one record.
+    struct ChildOutput {
+        stdout: String,
+        stderr: String,
+    }
+
+    impl ChildOutput {
+        /// The line the child logged, as written to stderr with any styling.
+        fn stderr_line(&self) -> &str {
+            self.stderr
+                .lines()
+                .find(|line| line.contains("to stderr"))
+                .unwrap_or_else(|| panic!("line missing from stderr: {:?}", self.stderr))
+        }
+    }
+
+    /// Reruns this test binary with only `stderr_child`, so `init` sets up the
+    /// global logger of a fresh process whose streams we can read.
+    ///
+    /// `color` is the child's color choice, `None` to leave it unset. The
+    /// child's stderr is a pipe, never a terminal; `env` adds variables on top
+    /// of a parent environment cleared of every variable that affects color
+    /// detection, so `CLICOLOR_FORCE` stands in for a terminal that supports
+    /// color.
+    fn run_child(color: Option<ColorChoice>, env: &[(&str, &str)]) -> ChildOutput {
+        let color = match color {
+            None => "unset",
+            Some(ColorChoice::Never) => "never",
+            Some(ColorChoice::Auto) => "auto",
+            Some(ColorChoice::Always) => "always",
+        };
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args(["tests::stderr_child", "--exact", "--ignored", "--nocapture"])
+            .env_remove("NO_COLOR")
+            .env_remove("CLICOLOR")
+            .env_remove("CLICOLOR_FORCE")
+            .env(STDERR_CHILD, color)
+            .envs(env.iter().copied())
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "child failed: {output:?}");
+        ChildOutput {
+            stdout: String::from_utf8(output.stdout).unwrap(),
+            stderr: String::from_utf8(output.stderr).unwrap(),
+        }
     }
 
     #[test]
     fn test_init_writes_lines_to_stderr_not_stdout() {
-        // Rerun this test binary with only `stderr_child`, so `init` sets up
-        // the global logger of a fresh process whose streams we can read.
-        let output = std::process::Command::new(std::env::current_exe().unwrap())
-            .args(["tests::stderr_child", "--exact", "--nocapture"])
-            .env(STDERR_CHILD, "1")
-            .output()
-            .unwrap();
-        assert!(output.status.success(), "child failed: {output:?}");
+        let output = run_child(None, &[]);
 
         // libtest writes its own report to stdout, so check for the line
         // itself rather than an empty stdout.
-        let line = "|  INFO | caesium::tests ] to stderr";
-        let stdout = String::from_utf8(output.stdout).unwrap();
-        let stderr = String::from_utf8(output.stderr).unwrap();
         assert!(
-            stderr.contains(line),
-            "line missing from stderr: {stderr:?}"
+            output
+                .stderr_line()
+                .ends_with("|  INFO | caesium::tests ] to stderr"),
+            "{:?}",
+            output.stderr
         );
-        assert!(!stdout.contains(line), "line written to stdout: {stdout:?}");
+        assert!(
+            !output.stdout.contains("to stderr"),
+            "line written to stdout: {:?}",
+            output.stdout
+        );
+    }
+
+    #[test]
+    fn test_color_auto_styles_lines_when_stderr_supports_color() {
+        let output = run_child(Some(ColorChoice::Auto), &[("CLICOLOR_FORCE", "1")]);
+
+        assert!(output.stderr_line().contains('\x1b'), "{:?}", output.stderr);
+    }
+
+    #[test]
+    fn test_color_auto_leaves_lines_plain_when_stderr_does_not_support_color() {
+        let output = run_child(Some(ColorChoice::Auto), &[]);
+
+        assert!(
+            !output.stderr_line().contains('\x1b'),
+            "{:?}",
+            output.stderr
+        );
+    }
+
+    #[test]
+    fn test_color_auto_respects_no_color() {
+        let output = run_child(
+            Some(ColorChoice::Auto),
+            &[("CLICOLOR_FORCE", "1"), ("NO_COLOR", "1")],
+        );
+
+        assert!(
+            !output.stderr_line().contains('\x1b'),
+            "{:?}",
+            output.stderr
+        );
+    }
+
+    #[test]
+    fn test_color_never_leaves_lines_plain_even_when_stderr_supports_color() {
+        let output = run_child(Some(ColorChoice::Never), &[("CLICOLOR_FORCE", "1")]);
+
+        assert!(
+            !output.stderr_line().contains('\x1b'),
+            "{:?}",
+            output.stderr
+        );
+    }
+
+    #[test]
+    fn test_color_defaults_to_auto() {
+        let output = run_child(None, &[("CLICOLOR_FORCE", "1")]);
+
+        assert!(output.stderr_line().contains('\x1b'), "{:?}", output.stderr);
     }
 
     #[test]

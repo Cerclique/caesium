@@ -16,7 +16,7 @@ include = ["src/**", "examples/**", "README.md", "CHANGELOG.md", "LICENSE"]
 name = "caesium"
 
 [dependencies]
-env_logger = { version = "0.11.11", features = ["default"] }
+env_logger = { version = "0.11.11", default-features = false, features = ["auto-color"] }
 log = "0.4.33"
 thiserror = "2.0.19"
 
