@@ -53,7 +53,7 @@ fn main() {
 Records logged through `log` by your dependencies go through the same logger.
 
 The default minimum level is `Info`. Override it with `level`.
-Color is automatic by default: each line is styled with its level's color
+Color is automatic by default: each line is colored with its level's color
 when stderr supports it. Turn it off with `color(ColorChoice::Never)`, or force
 it, even when stderr is redirected, with `color(ColorChoice::Always)`.
 Source location is shown by default. Hide it with `source_location(false)`.
@@ -135,9 +135,8 @@ written.
 - `LoggerBuilder::new` reads no environment variables, so
   `RUST_LOG` has no effect. The minimum level is set only via `level`.
 - `ColorChoice::Auto` decides whether stderr supports color through
-  `env_logger`'s terminal detection: color is used when stderr is a terminal,
-  and the `NO_COLOR` and `CLICOLOR_FORCE` conventions are respected. These
-  are the only environment variables that change the output.
+  `env_logger`'s detection: color is used when stderr is a terminal, and the
+  `NO_COLOR`, `CLICOLOR` and `CLICOLOR_FORCE` conventions are respected.
 
 ## Changelog
 

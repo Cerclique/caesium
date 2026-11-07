@@ -29,33 +29,36 @@ pub enum LoggerError {
 // Builder
 // ---------------------------------------------------------------------------
 
-/// When lines are styled with their level's color. Passed to
+/// When lines are colored with their level's color. Passed to
 /// [`LoggerBuilder::color`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum ColorChoice {
-    /// Never styles lines, even when stderr is a terminal.
+    /// Never colors lines, even when stderr is a terminal.
     Never,
-    /// Styles lines only when stderr supports it: it is a terminal, or
-    /// `CLICOLOR_FORCE` is set, and `NO_COLOR` is not. The default.
+    /// Colors lines only when stderr supports color, as detected by
+    /// `env_logger`: when stderr is a terminal, following the `NO_COLOR`,
+    /// `CLICOLOR` and `CLICOLOR_FORCE` conventions. The default.
     #[default]
     Auto,
-    /// Always styles lines, even when stderr is redirected to a file or a
+    /// Always colors lines, even when stderr is redirected to a file or a
     /// pipe.
     Always,
 }
 
-impl From<ColorChoice> for env_logger::WriteStyle {
-    fn from(choice: ColorChoice) -> Self {
-        match choice {
-            ColorChoice::Never => Self::Never,
-            ColorChoice::Auto => Self::Auto,
-            ColorChoice::Always => Self::Always,
+impl ColorChoice {
+    /// The `env_logger` write style that applies this choice. Kept private
+    /// so `env_logger`'s types stay out of the public API.
+    fn write_style(self) -> env_logger::WriteStyle {
+        match self {
+            Self::Never => env_logger::WriteStyle::Never,
+            Self::Auto => env_logger::WriteStyle::Auto,
+            Self::Always => env_logger::WriteStyle::Always,
         }
     }
 }
 
 /// Configures and initializes the global logger, which writes elapsed time,
-/// styled with each level's color when stderr supports it, on top of
+/// colored with each level's color when stderr supports it, on top of
 /// [`env_logger`].
 ///
 /// `LoggerBuilder` uses a fluent builder pattern. Construct it via [`new`],
@@ -111,7 +114,7 @@ impl LoggerBuilder {
         self
     }
 
-    /// Sets when lines are styled with their level's color. Defaults to
+    /// Sets when lines are colored with their level's color. Defaults to
     /// [`ColorChoice::Auto`]. Returns `self` for chaining.
     pub fn color(mut self, choice: ColorChoice) -> Self {
         self.format.color = choice;
@@ -160,7 +163,7 @@ impl LoggerBuilder {
         let mut builder = env_logger::Builder::new();
         builder.target(env_logger::Target::Stderr);
         builder.filter_level(self.level);
-        builder.write_style(self.format.color.into());
+        builder.write_style(self.format.color.write_style());
         builder.format(move |buf, record| formatter.format(buf, record));
         builder
     }
@@ -305,20 +308,22 @@ mod tests {
         );
     }
 
+    /// Whether `text` holds ANSI color codes.
+    fn is_colored(text: &str) -> bool {
+        text.contains('\x1b')
+    }
+
     #[test]
-    fn test_color_always_styles_a_line_that_is_not_going_to_a_terminal() {
-        // A pipe is never a terminal, so only a forced choice styles it.
+    fn test_color_always_colors_a_line_that_is_not_going_to_a_terminal() {
+        // A pipe is never a terminal, so only a forced choice colors it.
         let builder = LoggerBuilder::new().color(ColorChoice::Always);
         let (log, capture) = piped(&builder, Duration::ZERO);
 
-        emit(&log, Level::Error, "styled");
+        emit(&log, Level::Error, "colored");
 
         let output = capture.contents();
-        assert!(
-            output.starts_with('\x1b'),
-            "expected ANSI styling, got {output:?}"
-        );
-        assert!(output.contains("[00:00:00.000 | ERROR | my_crate | src/lib.rs:42 ] styled"));
+        assert!(is_colored(&output), "expected color, got {output:?}");
+        assert!(output.contains("[00:00:00.000 | ERROR | my_crate | src/lib.rs:42 ] colored"));
     }
 
     #[test]
@@ -328,33 +333,39 @@ mod tests {
         emit(&log, Level::Error, "plain");
 
         let output = capture.contents();
-        assert!(
-            !output.contains('\x1b'),
-            "unexpected ANSI styling in {output:?}"
-        );
+        assert!(!is_colored(&output), "unexpected color in {output:?}");
     }
 
-    /// Set in the child process started by
-    /// `test_init_writes_lines_to_stderr_not_stdout`.
+    /// Set in the child process started by `run_child`, to the value
+    /// `CHILD_COLORS` gives for its color choice.
     const STDERR_CHILD: &str = "CAESIUM_STDERR_CHILD";
 
+    /// Every color choice a child process can be given, `None` leaving it
+    /// unset, with the `STDERR_CHILD` value that carries it.
+    const CHILD_COLORS: [(Option<ColorChoice>, &str); 4] = [
+        (None, "unset"),
+        (Some(ColorChoice::Never), "never"),
+        (Some(ColorChoice::Auto), "auto"),
+        (Some(ColorChoice::Always), "always"),
+    ];
+
     /// Runs only inside the child process started by `run_child`: initializes
-    /// the real global logger with the color choice named by `STDERR_CHILD`
+    /// the real global logger with the color choice carried by `STDERR_CHILD`
     /// and logs one record. Does nothing if run by hand with `--ignored`.
     #[test]
     #[ignore = "helper run by test_init_writes_lines_to_stderr_not_stdout and the color tests"]
     fn stderr_child() {
-        let Some(color) = std::env::var_os(STDERR_CHILD) else {
+        let Some(value) = std::env::var_os(STDERR_CHILD) else {
             return;
         };
-        let builder = LoggerBuilder::new().source_location(false);
-        let builder = match color.to_str() {
-            Some("unset") => builder,
-            Some("never") => builder.color(ColorChoice::Never),
-            Some("auto") => builder.color(ColorChoice::Auto),
-            Some("always") => builder.color(ColorChoice::Always),
-            other => panic!("unknown color choice {other:?}"),
-        };
+        let (color, _) = CHILD_COLORS
+            .into_iter()
+            .find(|(_, name)| value == *name)
+            .unwrap_or_else(|| panic!("unknown color choice {value:?}"));
+        let mut builder = LoggerBuilder::new().source_location(false);
+        if let Some(color) = color {
+            builder = builder.color(color);
+        }
         builder.init().unwrap();
         info!("to stderr");
     }
@@ -367,12 +378,16 @@ mod tests {
     }
 
     impl ChildOutput {
-        /// The line the child logged, as written to stderr with any styling.
+        /// The line the child logged, as written to stderr with any color.
         fn stderr_line(&self) -> &str {
             self.stderr
                 .lines()
                 .find(|line| line.contains("to stderr"))
                 .unwrap_or_else(|| panic!("line missing from stderr: {:?}", self.stderr))
+        }
+
+        fn is_colored(&self) -> bool {
+            is_colored(self.stderr_line())
         }
     }
 
@@ -381,22 +396,20 @@ mod tests {
     ///
     /// `color` is the child's color choice, `None` to leave it unset. The
     /// child's stderr is a pipe, never a terminal; `env` adds variables on top
-    /// of a parent environment cleared of every variable that affects color
-    /// detection, so `CLICOLOR_FORCE` stands in for a terminal that supports
-    /// color.
+    /// of a parent environment cleared of every variable that can turn color
+    /// on or off for a pipe, so `CLICOLOR_FORCE` stands in for a terminal that
+    /// supports color.
     fn run_child(color: Option<ColorChoice>, env: &[(&str, &str)]) -> ChildOutput {
-        let color = match color {
-            None => "unset",
-            Some(ColorChoice::Never) => "never",
-            Some(ColorChoice::Auto) => "auto",
-            Some(ColorChoice::Always) => "always",
-        };
+        let (_, value) = CHILD_COLORS
+            .into_iter()
+            .find(|(choice, _)| *choice == color)
+            .expect("every color choice is in CHILD_COLORS");
         let output = std::process::Command::new(std::env::current_exe().unwrap())
             .args(["tests::stderr_child", "--exact", "--ignored", "--nocapture"])
             .env_remove("NO_COLOR")
             .env_remove("CLICOLOR")
             .env_remove("CLICOLOR_FORCE")
-            .env(STDERR_CHILD, color)
+            .env(STDERR_CHILD, value)
             .envs(env.iter().copied())
             .output()
             .unwrap();
@@ -428,21 +441,17 @@ mod tests {
     }
 
     #[test]
-    fn test_color_auto_styles_lines_when_stderr_supports_color() {
+    fn test_color_auto_colors_lines_when_stderr_supports_color() {
         let output = run_child(Some(ColorChoice::Auto), &[("CLICOLOR_FORCE", "1")]);
 
-        assert!(output.stderr_line().contains('\x1b'), "{:?}", output.stderr);
+        assert!(output.is_colored(), "{:?}", output.stderr);
     }
 
     #[test]
     fn test_color_auto_leaves_lines_plain_when_stderr_does_not_support_color() {
         let output = run_child(Some(ColorChoice::Auto), &[]);
 
-        assert!(
-            !output.stderr_line().contains('\x1b'),
-            "{:?}",
-            output.stderr
-        );
+        assert!(!output.is_colored(), "{:?}", output.stderr);
     }
 
     #[test]
@@ -452,29 +461,21 @@ mod tests {
             &[("CLICOLOR_FORCE", "1"), ("NO_COLOR", "1")],
         );
 
-        assert!(
-            !output.stderr_line().contains('\x1b'),
-            "{:?}",
-            output.stderr
-        );
+        assert!(!output.is_colored(), "{:?}", output.stderr);
     }
 
     #[test]
     fn test_color_never_leaves_lines_plain_even_when_stderr_supports_color() {
         let output = run_child(Some(ColorChoice::Never), &[("CLICOLOR_FORCE", "1")]);
 
-        assert!(
-            !output.stderr_line().contains('\x1b'),
-            "{:?}",
-            output.stderr
-        );
+        assert!(!output.is_colored(), "{:?}", output.stderr);
     }
 
     #[test]
     fn test_color_defaults_to_auto() {
         let output = run_child(None, &[("CLICOLOR_FORCE", "1")]);
 
-        assert!(output.stderr_line().contains('\x1b'), "{:?}", output.stderr);
+        assert!(output.is_colored(), "{:?}", output.stderr);
     }
 
     #[test]
