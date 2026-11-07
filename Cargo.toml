@@ -25,6 +25,7 @@ name = "main"
 path = "examples/main.rs"
 
 [lints.rust]
+missing_debug_implementations = "warn"
 missing_docs = "warn"
 unsafe_code = "forbid"
 

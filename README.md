@@ -60,10 +60,10 @@ Source location is shown by default. Hide it with `source_location(false)`.
 
 Only one global logger can exist per process. If one is already initialized,
 whether by an earlier call or by another crate, `init` returns
-`LoggerError::InitError` (wrapping `log::SetLoggerError`) and changes nothing:
+`LoggerError::AlreadyInitialized` and changes nothing:
 
 ```text
-failed to initialize logger: attempted to set a logger after the logging system was already initialized
+a global logger is already initialized
 ```
 
 ## Example
@@ -82,7 +82,7 @@ cargo run --example main
 [00:00:00.000 | ERROR | main | examples/main.rs:15 ] This is an error message
 [00:00:00.150 |  INFO | main | examples/main.rs:19 ] After a short delay
 [00:00:00.400 |  WARN | main | examples/main.rs:22 ] Another warning after more time has passed
-Expected init error: failed to initialize logger: attempted to set a logger after the logging system was already initialized
+Expected init error: a global logger is already initialized
 ```
 
 The `trace!` call is filtered out because the minimum level is `Debug`.
