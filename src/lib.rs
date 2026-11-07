@@ -17,11 +17,12 @@ mod format;
 ///
 /// [`thiserror`]: https://docs.rs/thiserror
 #[derive(Debug, Error)]
+#[non_exhaustive]
 pub enum LoggerError {
-    /// Returned when the global logger is already initialized, whether by an
-    /// earlier call to [`LoggerBuilder::init`] or by another crate.
-    #[error("failed to initialize logger: {0}")]
-    InitError(#[from] log::SetLoggerError),
+    /// The global logger was already initialized, whether by an earlier call
+    /// to [`LoggerBuilder::init`] or by another crate.
+    #[error("a global logger is already initialized")]
+    AlreadyInitialized,
 }
 
 // ---------------------------------------------------------------------------
@@ -55,6 +56,7 @@ pub enum LoggerError {
 /// [`color`]: LoggerBuilder::color
 /// [`source_location`]: LoggerBuilder::source_location
 /// [`init`]: LoggerBuilder::init
+#[derive(Debug)]
 #[must_use = "call .init() to enable logging"]
 pub struct LoggerBuilder {
     level: LevelFilter,
@@ -104,11 +106,13 @@ impl LoggerBuilder {
     ///
     /// Only one global logger can exist per process. If one is already
     /// initialized, whether by an earlier call to this method or by another
-    /// crate, this returns [`LoggerError::InitError`] and changes nothing.
+    /// crate, this returns [`LoggerError::AlreadyInitialized`] and changes
+    /// nothing.
     pub fn init(&self) -> Result<(), LoggerError> {
         let start = Instant::now();
-        self.env_builder(move || start.elapsed()).try_init()?;
-        Ok(())
+        self.env_builder(move || start.elapsed())
+            .try_init()
+            .map_err(|_| LoggerError::AlreadyInitialized)
     }
 
     /// Returns the `env_logger` builder that [`init`] initializes globally,
@@ -366,8 +370,23 @@ mod tests {
         let second = builder.init();
 
         assert!(
-            matches!(second, Err(LoggerError::InitError(_))),
-            "expected InitError, got {second:?}"
+            matches!(second, Err(LoggerError::AlreadyInitialized)),
+            "expected AlreadyInitialized, got {second:?}"
         );
+    }
+
+    #[test]
+    fn test_already_initialized_has_a_message_and_no_source() {
+        let error = LoggerError::AlreadyInitialized;
+
+        assert_eq!(error.to_string(), "a global logger is already initialized");
+        assert!(std::error::Error::source(&error).is_none());
+    }
+
+    #[test]
+    fn test_builder_implements_debug() {
+        let debug = format!("{:?}", LoggerBuilder::new());
+
+        assert!(debug.starts_with("LoggerBuilder"), "got {debug:?}");
     }
 }

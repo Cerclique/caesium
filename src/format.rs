@@ -20,7 +20,7 @@ use log::Record;
 /// source location.
 ///
 /// The default is uncolored with source location shown.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub(crate) struct LineFormat {
     pub(crate) color: bool,
     pub(crate) source_location: bool,

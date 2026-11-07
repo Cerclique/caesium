@@ -21,7 +21,7 @@ fn main() {
     std::thread::sleep(std::time::Duration::from_millis(250));
     warn!("Another warning after more time has passed");
 
-    // Calling init again fails: a global logger is already installed
+    // Calling init again fails: a global logger is already initialized
     match builder.init() {
         Err(e) => println!("Expected init error: {e}"),
         Ok(()) => unreachable!("init should not succeed a second time"),
