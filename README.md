@@ -13,7 +13,7 @@ A logger wrapper with elapsed time tracking and colorized output built on [env_l
 - Fixed line format: elapsed time, level, target and optional source
   location (see [Format](#format))
 - Programmatic log level configuration via `LoggerBuilder`
-- Colorized output toggle via `color`, disabled by default
+- Color via `color(ColorChoice)`: automatic by default, when stderr supports it
 - Source location toggle via `source_location`, enabled by default
 
 ## Installation
@@ -53,7 +53,9 @@ fn main() {
 Records logged through `log` by your dependencies go through the same logger.
 
 The default minimum level is `Info`. Override it with `level`.
-Colorized output is disabled by default. Enable it with `color`.
+Color is automatic by default: each line is colored with its level's color
+when stderr supports it. Turn it off with `color(ColorChoice::Never)`, or force
+it, even when stderr is redirected, with `color(ColorChoice::Always)`.
 Source location is shown by default. Hide it with `source_location(false)`.
 
 ### Errors
@@ -76,12 +78,12 @@ cargo run --example main
 ```
 
 ```text
-[00:00:00.000 |  INFO | main | examples/main.rs:11 ] Logger initialized successfully!
-[00:00:00.000 | DEBUG | main | examples/main.rs:12 ] This is a debug message
-[00:00:00.000 |  WARN | main | examples/main.rs:14 ] This is a warning message
-[00:00:00.000 | ERROR | main | examples/main.rs:15 ] This is an error message
-[00:00:00.150 |  INFO | main | examples/main.rs:19 ] After a short delay
-[00:00:00.400 |  WARN | main | examples/main.rs:22 ] Another warning after more time has passed
+[00:00:00.000 |  INFO | main | examples/main.rs:13 ] Logger initialized successfully!
+[00:00:00.000 | DEBUG | main | examples/main.rs:14 ] This is a debug message
+[00:00:00.000 |  WARN | main | examples/main.rs:16 ] This is a warning message
+[00:00:00.000 | ERROR | main | examples/main.rs:17 ] This is an error message
+[00:00:00.150 |  INFO | main | examples/main.rs:21 ] After a short delay
+[00:00:00.400 |  WARN | main | examples/main.rs:24 ] Another warning after more time has passed
 Expected init error: a global logger is already initialized
 ```
 
@@ -132,10 +134,9 @@ written.
 
 - `LoggerBuilder::new` reads no environment variables, so
   `RUST_LOG` has no effect. The minimum level is set only via `level`.
-- `color(true)` does not force color. It resolves through
-  `env_logger`'s terminal detection, so styling is stripped when stderr is
-  not a TTY (for example, when redirected to a file). It means "allow color
-  when the terminal supports it".
+- `ColorChoice::Auto` decides whether stderr supports color through
+  `env_logger`'s detection: color is used when stderr is a terminal, and the
+  `NO_COLOR`, `CLICOLOR` and `CLICOLOR_FORCE` conventions are respected.
 
 ## Changelog
 

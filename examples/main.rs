@@ -1,10 +1,12 @@
 //! Initializes the logger, logs at every level, then shows the error from a
 //! second initialization.
 
-use caesium::{LevelFilter, LoggerBuilder, debug, error, info, trace, warn};
+use caesium::{ColorChoice, LevelFilter, LoggerBuilder, debug, error, info, trace, warn};
 
 fn main() {
-    let builder = LoggerBuilder::new().level(LevelFilter::Debug).color(true);
+    let builder = LoggerBuilder::new()
+        .level(LevelFilter::Debug)
+        .color(ColorChoice::Auto);
 
     builder.init().expect("logger init failed");
 

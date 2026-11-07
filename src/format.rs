@@ -16,20 +16,23 @@ use std::time::Duration;
 
 use log::Record;
 
+use crate::ColorChoice;
+
 /// How every line is written: whether it is colored and whether it shows
 /// source location.
 ///
-/// The default is uncolored with source location shown.
+/// The default is colored when stderr supports it ([`ColorChoice::Auto`]),
+/// with source location shown.
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct LineFormat {
-    pub(crate) color: bool,
+    pub(crate) color: ColorChoice,
     pub(crate) source_location: bool,
 }
 
 impl Default for LineFormat {
     fn default() -> Self {
         Self {
-            color: false,
+            color: ColorChoice::Auto,
             source_location: true,
         }
     }
@@ -67,20 +70,20 @@ impl<C: Fn() -> Duration> LineFormatter<C> {
     }
 
     /// Writes `record` as a formatted line to the `env_logger` formatter
-    /// buffer, styled with the level color when color is enabled.
+    /// buffer, wrapped in its level's color.
+    ///
+    /// Whether the color is written is not decided here: `env_logger`
+    /// resolves the color choice when it builds the logger, gives back an
+    /// empty style when that resolves to no color, and strips color the
+    /// destination doesn't support.
     pub(crate) fn format(
         &self,
         buf: &mut env_logger::fmt::Formatter,
         record: &Record<'_>,
     ) -> std::io::Result<()> {
         let line = self.format.line((self.elapsed)(), record);
-
-        if self.format.color {
-            let style = buf.default_level_style(record.level());
-            writeln!(buf, "{style}{line}{style:#}")
-        } else {
-            writeln!(buf, "{line}")
-        }
+        let style = buf.default_level_style(record.level());
+        writeln!(buf, "{style}{line}{style:#}")
     }
 }
 

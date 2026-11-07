@@ -49,6 +49,7 @@ The least severe level the global logger writes; records below it are dropped.
 _Avoid_: Level filter, log level, verbosity
 
 **Color**:
-Styling a whole line with its level's color, applied only when standard error
-supports it.
+Styling a whole line with its level's color. Applied by default when standard
+error supports it; it can be turned off, or forced even when standard error is
+redirected.
 _Avoid_: Colour, colorized output, styling
