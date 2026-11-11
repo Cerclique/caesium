@@ -12,9 +12,11 @@ instead.
 
 ## Development
 
-You need a stable Rust toolchain. The minimum supported Rust version (MSRV) is
-the `rust-version` in [`Cargo.toml`](../Cargo.toml); don't use language or library
-features newer than it.
+The toolchain is pinned in [`rust-toolchain.toml`](../rust-toolchain.toml);
+rustup installs it automatically the first time you run `cargo` in the repo, and
+Dependabot bumps it weekly. The minimum supported Rust version (MSRV) is the
+`rust-version` in [`Cargo.toml`](../Cargo.toml), a separate, older version that CI
+checks on its own; don't use language or library features newer than it.
 
 ### Git hooks
 
@@ -65,6 +67,10 @@ The workflows live in [`.github/workflows/`](../.github/workflows/):
 | `pr-title.yml` | PRs | `conventional`: the PR title is a conventional commit |
 | `scheduled.yml` | Weekly, manual | New advisories against the locked dependencies, tests and clippy on beta and nightly |
 | `release.yml` | `v*` tag push | `publish`: publishes the crate to crates.io; then `release`: creates the GitHub Release with git-cliff notes |
+
+Jobs build with the toolchain pinned in `rust-toolchain.toml`, except `msrv`
+and the scheduled beta and nightly tests, which override it with
+`RUSTUP_TOOLCHAIN`.
 
 Every `rust.yml` job except `semver`, plus `conventional`, is required to
 merge, and the branch must be up to date with `main`: if GitHub says it is
